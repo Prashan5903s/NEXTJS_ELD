@@ -543,11 +543,11 @@ function Chart({ processedData, params = null }) {
     }))
     : [];
 
-  // const sda = [
-  //   { start: '02:00', end: '07:00' },
-  //   { start: '09:00', end: '09:50' },
-  //   { start: '11:00', end: '14:10' }
-  // ];
+    // const sda = [
+    //   { start: '02:00', end: '07:00' },
+    //   { start: '09:00', end: '09:50' },
+    //   { start: '11:00', end: '14:10' }
+    // ];
 
   const xAnnotations = overtimeRanges.map(range => ({
     x: range.start,
