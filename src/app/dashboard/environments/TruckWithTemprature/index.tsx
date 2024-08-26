@@ -15,7 +15,7 @@ const TruckWithTemprature = ({
   return (
     <div className={classes.truckContainer}>
       <div style={{ position: "relative" }}>
-        <Image src={TruckImg} alt="truck-image" width={60} height={250} />
+        <Image src={TruckImg} alt="truck-image" width={60} height={200} />
         <label className={classes.label}>{temprature}</label>
       </div>
 
