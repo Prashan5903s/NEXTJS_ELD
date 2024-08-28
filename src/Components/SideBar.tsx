@@ -80,7 +80,7 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
       id: "compliance",
       title: "Compliance",
       icon: "user-square",
-      path: "",
+      path: "/dashboard/compliance",
     },
     {
       id: "maintenance",
@@ -363,7 +363,7 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
       <div
         className={`${styles.sidebar}  ${
           isCollapsed ? styles.collapsed : ""
-        }  `}
+        } sidebarMenu`}
         onMouseEnter={mouseEnter}
         onMouseLeave={mouseLeave}
       >
