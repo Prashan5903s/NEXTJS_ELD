@@ -28,7 +28,7 @@ const DriverTable = () => {
         } catch (error) {
             console.error('Error fetching permissions:', error);
         }
-    }, 300); // Adjust the debounce delay as needed
+    }, 1000); // Adjust the debounce delay as needed
 
     useEffect(() => {
         fetchPermissions(setPermissn);
@@ -70,7 +70,7 @@ const DriverTable = () => {
     };
 
     // Debounced fetchUsers function
-    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 1000), [url]);
 
     useEffect(() => {
         debouncedFetchUsers(); // Call the debounced function

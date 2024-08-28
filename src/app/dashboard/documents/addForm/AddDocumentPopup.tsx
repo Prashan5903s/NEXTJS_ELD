@@ -138,7 +138,7 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
         } finally {
             setIsLoading(false);
         }
-    }, 300), [id, documentField]); // Adjust the debounce delay (300ms) as needed
+    }, 1000), [id, documentField]); // Adjust the debounce delay (300ms) as needed
 
     const onSubmitChange = async (e) => {
         e.preventDefault();

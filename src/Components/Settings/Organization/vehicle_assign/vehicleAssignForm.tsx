@@ -1,5 +1,4 @@
 "use client";
-<<<<<<< HEAD
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,15 +8,6 @@ import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import LoadingIcons from 'react-loading-icons';
-=======
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Select from "react-select";
-import { useForm, Controller } from "react-hook-form";
-import toastr from "toastr";
-import "toastr/build/toastr.min.css";
->>>>>>> origin/main
 
 type IFormInput = {
     driver_id: number;
@@ -28,10 +18,7 @@ type IFormInput = {
 function VehicleAssignForm({ id }) {
     const router = useRouter();
     const [vehicleAssign, setVehicleAssign] = useState(null);
-<<<<<<< HEAD
     const [isLoading, setIsLoading] = useState(false);
-=======
->>>>>>> origin/main
     const [editVehicleAssign, setEditVehicleAssign] = useState(null);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -75,7 +62,6 @@ function VehicleAssignForm({ id }) {
         timeOut: "5000",
     };
 
-<<<<<<< HEAD
     // const addvehicleAssign = async (data) => {
     //     setIsLoading(true);
     //     try {
@@ -210,9 +196,6 @@ function VehicleAssignForm({ id }) {
 
     const addvehicleAssign = async (data) => {
         setIsLoading(true);
-=======
-    const addvehicleAssign = async (data) => {
->>>>>>> origin/main
         try {
             const response = await fetch(`${url}/setting/driver/vehicleAssigns`, {
                 method: "POST",
@@ -224,36 +207,22 @@ function VehicleAssignForm({ id }) {
             });
 
             if (!response.ok) {
-<<<<<<< HEAD
                 setIsLoading(false);
                 const errorData = await response.json();
                 toastr["error"]("Error adding driver: " + errorData.message);
             } else {
                 setIsLoading(false);
-=======
-                const errorData = await response.json();
-                toastr["error"]("Error adding driver: " + errorData.message);
-            } else {
->>>>>>> origin/main
                 toastr["success"]("vehicleAssign added successfully!");
                 router.push("/settings/organization/vehicle-assign");
             }
         } catch (error) {
-<<<<<<< HEAD
             setIsLoading(false);
-=======
->>>>>>> origin/main
             toastr["error"]("Error adding driver: " + error.message);
         }
     };
 
-<<<<<<< HEAD
     const editvehicleAssign = async (id, data) => {
         setIsLoading(true);
-=======
-
-    const editvehicleAssign = async (id, data) => {
->>>>>>> origin/main
         try {
             const response = await fetch(`${url}/settings/vehicle/assign/${id}`, {
                 method: "PUT",
@@ -265,30 +234,20 @@ function VehicleAssignForm({ id }) {
             });
 
             if (!response.ok) {
-<<<<<<< HEAD
                 setIsLoading(false);
                 const errorData = await response.json();
                 toastr["error"]("Error updating driver: " + errorData.message);
             } else {
                 setIsLoading(false);
-=======
-                const errorData = await response.json();
-                toastr["error"]("Error updating driver: " + errorData.message);
-            } else {
->>>>>>> origin/main
                 toastr["success"]("vehicleAssign updated successfully!");
                 router.push("/settings/organization/vehicle-assign");
             }
         } catch (error) {
-<<<<<<< HEAD
             setIsLoading(false);
-=======
->>>>>>> origin/main
             toastr["error"]("Error updating driver: " + error.message);
         }
     };
 
-<<<<<<< HEAD
     // Create a debounced version of the onSubmit function
     const handleSubmits = useCallback(
         debounce(async (data) => {
@@ -305,75 +264,6 @@ function VehicleAssignForm({ id }) {
 
     const onSubmit = async (data) => {
         handleSubmits(data);
-=======
-    useEffect(() => {
-        const fetchEditvehicleAssign = async () => {
-            if (!id) return;
-            try {
-                const response = await fetch(`${url}/settings/vehicle/assign/${id}/edit`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setEditVehicleAssign(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching driver vehicleAssign: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching driver vehicleAssign: " + error.message);
-            }
-        };
-
-        fetchEditvehicleAssign();
-    }, [id, url, token]);
-
-    useEffect(() => {
-        const fetchVehicleAssign = async () => {
-            try {
-                const response = await fetch(`${url}/settings/vehicle/assign/create`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setVehicleAssign(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching vehicleAssign data: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching vehicleAssign data: " + error.message);
-            }
-        };
-
-        fetchVehicleAssign();
-    }, [url, token]);
-
-    useEffect(() => {
-        if (editVehicleAssign?.vehicleAssign) {
-            setValue("driver_id", editVehicleAssign?.vehicleAssign?.driver_id);
-            setValue("vehicle_id", editVehicleAssign?.vehicleAssign?.vechile_id || "");
-            setValue("is_active", editVehicleAssign?.vehicleAssign?.is_active?.toString() || "");
-        }
-    }, [editVehicleAssign, setValue]);
-
-    const onSubmit = async (data) => {
-        if (id) {
-            await editvehicleAssign(id, data);
-        } else {
-            await addvehicleAssign(data);
-        }
->>>>>>> origin/main
     };
 
     return (
@@ -436,15 +326,9 @@ function VehicleAssignForm({ id }) {
                                     role="tabpanel"
                                 >
                                     <div className="d-flex flex-column">
-<<<<<<< HEAD
                                         <div className="card overflow-visible card-flush py-4">
                                             <div className="text-center">
                                                 <p className="fw-bolder fs-7">{id ? 'Edit Vehicle Assign' : 'Add Vehicle Assign'}</p>
-=======
-                                        <div className="card card-flush py-4">
-                                            <div className="text-center">
-                                                <p className="fw-bolder fs-7">vehicleAssign</p>
->>>>>>> origin/main
                                             </div>
                                             <div className="separator my-0"></div>
                                             <div className="card-body mt-4">
@@ -605,19 +489,11 @@ function VehicleAssignForm({ id }) {
                                 <Link href="/dashboard/drivers" className="btn-light me-5">
                                     Cancel
                                 </Link>
-<<<<<<< HEAD
                                 <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
                                     <span className='indicator-progress d-flex justify-content-center'>
                                         {isLoading ? (
                                             <LoadingIcons.TailSpin height={18} />
                                         ) : id ? 'Update' : 'Save'}
-=======
-                                <button type="submit" className="btn-primary">
-                                    <span className="indicator-label">Save</span>
-                                    <span className="indicator-progress">
-                                        Please wait...{" "}
-                                        <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
->>>>>>> origin/main
                                     </span>
                                 </button>
                             </div>

@@ -41,7 +41,7 @@ const DocumentTable = () => {
                 // setError('Error fetching permissions: ' + error.message);
             } finally {
             }
-        }, 300), // Debounce time in milliseconds
+        }, 1000), // Debounce time in milliseconds
         [] // No dependencies, this will only be created once
     );
 
@@ -101,7 +101,7 @@ const DocumentTable = () => {
             } finally {
                 setLoading(false); // Set loading to false once data is fetched
             }
-        }, 300), // Debounce time in milliseconds
+        }, 1000), // Debounce time in milliseconds
         [] // Dependencies if any
     );
 
