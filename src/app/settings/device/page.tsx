@@ -1,9 +1,5 @@
 'use client'
-<<<<<<< HEAD
 import React, { useEffect, useState, useCallback } from "react";
-=======
-import React, { useEffect, useState } from "react";
->>>>>>> origin/main
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -36,11 +32,7 @@ const ActivityTable = () => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
-<<<<<<< HEAD
     const fetchUsers = async () => {
-=======
-    useEffect(() => {
->>>>>>> origin/main
         function getCookie(name) {
             const nameEQ = `${name}=`;
             const cookies = document.cookie.split(';').map(cookie => cookie.trim());
@@ -56,7 +48,6 @@ const ActivityTable = () => {
 
 
         const token = getCookie("token");
-<<<<<<< HEAD
         if (!token) {
             console.error('No token available');
             setLoading(false);
@@ -88,43 +79,6 @@ const ActivityTable = () => {
     useEffect(() => {
         debouncedFetchUsers();
     }, [debouncedFetchUsers]);
-=======
-
-        const fetchUsers = async () => {
-            try {
-                const token = getCookie("token");
-                if (!token) {
-                    console.error("No token available");
-                    return;
-                }
-
-                const response = await axios.get(
-                    `${url}/setting/driver/devices`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                setDevice(response.data.device);
-
-                setLoading(false); // Set loading to false when data is fetched
-
-            } catch (error) {
-
-                console.error("Error fetching users:", error);
-
-                setLoading(false); // Set loading to false even if there's an error
-
-            }
-
-        };
-
-        fetchUsers();
-
-    }, [url]);
->>>>>>> origin/main
 
 
     if (loading) {

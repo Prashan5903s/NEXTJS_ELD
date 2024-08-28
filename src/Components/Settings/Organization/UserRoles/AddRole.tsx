@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 'use client'
 import React, { useEffect, useState, useCallback } from "react";
@@ -6,34 +5,19 @@ import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { debounce } from 'lodash';
-=======
-'use client'
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import axios from "axios";
-import { useRouter } from "next/navigation";
->>>>>>> origin/main
 import { useForm, SubmitHandler } from "react-hook-form";
 import Skeleton from 'react-loading-skeleton'; // Import Skeleton
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
-<<<<<<< HEAD
 import LoadingIcons from 'react-loading-icons';
 import { on } from "stream";
-=======
->>>>>>> origin/main
 
 export default function AddUserRoleComponent({ id }) {
   const { register, handleSubmit, formState: { errors }, setValue, getValues } = useForm();
   const [module, setModule] = useState<Module[]>([]);
-<<<<<<< HEAD
   const [isLoading, setIsLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [roles, setRoles] = useState<Roles>();
-=======
-  const [items, setItems] = useState([]);
-  const [roles, setRoles] = useState();
->>>>>>> origin/main
   const [alls, setAlls] = useState<All[]>();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -42,16 +26,10 @@ export default function AddUserRoleComponent({ id }) {
     id: string;
     // Add other fields if necessary
   };
-<<<<<<< HEAD
 
   type Roles = {
     permissions?: Permission[];
     name?: string;
-=======
-  
-  type Roles = {
-    permissions?: Permission[]; // Ensure that permissions is an array of Permission objects
->>>>>>> origin/main
   };
 
   interface Module {
@@ -131,19 +109,10 @@ export default function AddUserRoleComponent({ id }) {
 
   const token = getCookie("token");
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-<<<<<<< HEAD
 
   const fetchModules = useCallback(
     debounce(async () => {
       try {
-=======
-  
-
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const token = getCookie("token");
->>>>>>> origin/main
         if (!token) {
           console.error("No token available");
           return;
@@ -164,7 +133,6 @@ export default function AddUserRoleComponent({ id }) {
         console.error("Error fetching users:", error);
         setLoading(false);
       }
-<<<<<<< HEAD
     }, 1000), // Adjust debounce delay as needed (in milliseconds)
     [token, url] // Dependencies
   );
@@ -216,44 +184,6 @@ export default function AddUserRoleComponent({ id }) {
       setValue("name", roles.name || ''); // Update form value when roles data is fetched
     }
   }, [roles, id, setValue]); // Ensure setValue is included in dependencies
-=======
-    };
-
-    fetchModules();
-  }, [token, url]);
-
-  useEffect(() => {
-    if (id) {
-      const fetchEditModules = async () => {
-        try {
-          const token = getCookie("token");
-          if (!token) {
-            console.error("No token available");
-            return;
-          }
-
-          const response = await axios.get(
-            `${url}/setting/organization/user-roles/${id}/edit`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          setAlls(response.data.modules);
-          setRoles(response.data.role);
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching users:", error);
-          setLoading(false);
-        }
-      };
-
-      fetchEditModules();
-    }
-  }, [id, token, url]);
->>>>>>> origin/main
 
   useEffect(() => {
     if (!id && Array.isArray(module)) {
@@ -350,7 +280,6 @@ export default function AddUserRoleComponent({ id }) {
     }));
   };
 
-<<<<<<< HEAD
   const debouncedSaveData = useCallback(debounce(async (data) => {
     setIsLoading(true);
     try {
@@ -379,7 +308,7 @@ export default function AddUserRoleComponent({ id }) {
     } finally {
       setIsLoading(false); // Ensure loading state is updated
     }
-  }, 300), [url, router]);
+  }, 1000), [url, router]);
 
   const debouncedEditData = useCallback(debounce(async (data) => {
     setIsLoading(true);
@@ -409,12 +338,9 @@ export default function AddUserRoleComponent({ id }) {
     } finally {
       setIsLoading(false); // Ensure loading state is updated
     }
-  }, 300), [url, id, router]);
+  }, 1000), [url, id, router]);
 
   const submit = async (data) => {
-=======
-  const submit: SubmitHandler<any> = async (data) => {
->>>>>>> origin/main
     const filteredItems = items.map(item => ({
       ...item,
       permissions: item.permissions.filter(permission => permission.checked),
@@ -428,85 +354,15 @@ export default function AddUserRoleComponent({ id }) {
 
     try {
       if (!id) {
-<<<<<<< HEAD
         debouncedSaveData(formData);
       } else {
         debouncedEditData(formData);
-=======
-        await saveData(formData);
-      } else {
-        await editData(formData);
->>>>>>> origin/main
       }
     } catch (error) {
       console.error("Error saving data:", error);
     }
   };
 
-<<<<<<< HEAD
-=======
-  const saveData = async (data) => {
-    const token = getCookie("token");
-    if (!token) {
-      console.error("No token available");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${url}/setting/organization/user-roles`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status >= 200 && response.status < 300) {
-        toastr['success']('Role added successfully!');
-        router.push("/settings/organization/user-roles");
-      }
-    } catch (error) {
-      console.error("Error saving data:", error);
-      throw error;
-    }
-  };
-
-  const editData = async (data) => {
-    const token = getCookie("token");
-    if (!token) {
-      console.error("No token available");
-      return;
-    }
-
-    try {
-      const response = await axios.put(
-        `${url}/setting/organization/user-roles/${id}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.status >= 200 && response.status < 300) {
-        toastr['success']('Role updated successfully!');
-        router.push("/settings/organization/user-roles");
-      }
-    } catch (error) {
-      console.error("Error updating data:", error);
-      throw error;
-    }
-  };
-
-  if (loading) {
-    return <Skeleton count={1} height={50} />;
-  }
-
-
->>>>>>> origin/main
   return (
     <div className="d-flex flex-column flex-column-fluid">
       <div id="kt_app_toolbar" className="app-toolbar pt-6 pb-2 mb-5">
@@ -535,11 +391,7 @@ export default function AddUserRoleComponent({ id }) {
         <div id="kt_app_content_container" className="app-container container-fluid">
           <div>
             <form className="form" onSubmit={handleSubmit(submit)}>
-<<<<<<< HEAD
               <div className="d-flex flex-column me-n7 pe-7">
-=======
-              <div className="d-flex flex-column overflow-lg-auto overflow-xl-auto me-n7 pe-7">
->>>>>>> origin/main
                 <div className="fv-row mb-10">
                   <label className="fs-5 fw-bold form-label mb-2">
                     <span className="required">Role Name</span>
@@ -550,13 +402,8 @@ export default function AddUserRoleComponent({ id }) {
                     <>
                       <input
                         name="name"
-<<<<<<< HEAD
                         defaultValue={roles && roles['name'] ? roles['name'] : ''} // Default value from roles or empty string
                         className={`form-control form-control-solid mb-2 ${errors.name ? 'is-invalid' : ''}`} // Fixed className syntax
-=======
-                        defaultValue={roles && roles['name'] || ''} // Default value from roles or empty string
-                        className="form-control form-control-solid mb-2"
->>>>>>> origin/main
                         placeholder="Enter role name"
                         {...register("name", getValidationRules("name"))} // Register the input with validation rules
                         onChange={(e) => setValue("name", e.target.value)} // Use setValue to update form state
@@ -634,19 +481,11 @@ export default function AddUserRoleComponent({ id }) {
                 <Link href="/settings/organization/user-roles" className='btn-light me-5 px-7 py-4'>
                   Cancel
                 </Link>
-<<<<<<< HEAD
                 <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
                   <span className='indicator-progress d-flex justify-content-center'>
                     {isLoading ? (
                       <LoadingIcons.TailSpin height={18} />
                     ) : id ? 'Update' : 'Save'}
-=======
-                <button type="submit" className='btn-primary px-8 py-4'>
-                  <span className="indicator-label">Save</span>
-                  <span className="indicator-progress">
-                    Please wait...{" "}
-                    <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
->>>>>>> origin/main
                   </span>
                 </button>
               </div>

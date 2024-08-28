@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 'use client'
-=======
-'use-client'
->>>>>>> origin/main
 import React, { useEffect, useState } from "react";
 import Header from "@/Components/Header";
 import RightSidebar from "@/Components/RightSidebar";
@@ -16,7 +12,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>)
 {
-<<<<<<< HEAD
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isToggled, setIsToggled] = useState(true);
   const toggleSidebar = () => {
@@ -48,14 +43,6 @@ export default function RootLayout({
             mouseEnter={handleMouseEnter}
             mouseLeave={handleMouseLeave}
             setSidebarToggle={setSidebarToggle}/>
-=======
-  return (
-   <>
-    <div className='main' style={{height:'100vh',width:'100%'}}>
-      <Header />
-     <div className='dashboard'>
-      <Sidebar />
->>>>>>> origin/main
       <main className='mainContainer'>{children}</main>
       <RightSidebar />
      </div>

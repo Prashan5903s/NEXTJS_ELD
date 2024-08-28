@@ -20,10 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-<<<<<<< HEAD
       <link rel="icon" href='/logo/favicon.ico' />
-=======
->>>>>>> origin/main
       <body className={inter.className}>{children}</body>
     </html>
   );
