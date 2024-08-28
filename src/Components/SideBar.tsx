@@ -2,6 +2,10 @@
 import React, { useEffect, useState } from "react";
 import styles from "../styles/sidebar.module.css";
 import Link from "next/link";
+<<<<<<< HEAD
+import { redirect, useRouter } from "next/navigation";
+=======
+>>>>>>> origin/main
 import { debounce } from 'lodash';
 import { getPermissions } from "@/Components/permission/page";
 
@@ -10,6 +14,10 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
     const [subItemId, setSubItemId] = useState("");
     const [subChildItemId, setSubChildItemId] = useState("");
     const [permissn, setPermissn] = useState([]);
+<<<<<<< HEAD
+    const router = useRouter();
+=======
+>>>>>>> origin/main
 
     const fetchPermissions = debounce(async (setPermissn) => {
         try {
@@ -24,6 +32,10 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
     const menuItems = [
         {
             id: 'overview',
@@ -41,10 +53,17 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                             title: "Vehicles",
                             path: "/dashboard/vehicles"
                         },
+<<<<<<< HEAD
+                        permissn.includes(6) && {
+                            id: 'locations',
+                            title: "Locations",
+                            path: "/dashboard/locations"
+=======
                         {
                             id: 'locations',
                             title: "Locations",
                             path: ""
+>>>>>>> origin/main
                         }
                     ].filter(Boolean)
                 },
@@ -54,6 +73,14 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                     path: "/dashboard/drivers"
                 },
                 {
+<<<<<<< HEAD
+                    id: 'fleet_user',
+                    title: "Fleet User",
+                    path: "/dashboard/fleet-user"
+                },
+                {
+=======
+>>>>>>> origin/main
                     id: 'environments',
                     title: "Environments",
                     path: ""
@@ -98,7 +125,11 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
             id: 'documents',
             title: "Documents",
             icon: "document",
+<<<<<<< HEAD
+            path: "/dashboard/documents",
+=======
             path: "",
+>>>>>>> origin/main
         },
         {
             id: 'reports',
@@ -140,7 +171,11 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                 {
                     id: 'fleets',
                     title: "Fleets",
+<<<<<<< HEAD
+                    path: "",
+=======
                     path: "/settings/fleets",
+>>>>>>> origin/main
                     subitems: [
                         { id: 'driver-assignment', title: "Driver Assignment", path: "" },
                         {
@@ -170,6 +205,13 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                 setParentId("");
             } else {
                 setParentId(menuId);
+<<<<<<< HEAD
+                console.log(menuItems[idx].path);
+                if (menuItems[idx].path != "") {
+                    router.push(menuItems[idx].path);
+                }
+=======
+>>>>>>> origin/main
             }
             setSubItemId("");
             setSubChildItemId("");
@@ -182,6 +224,16 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                         setSubItemId("");
                     } else {
                         setSubItemId(menuId);
+<<<<<<< HEAD
+                        let subIdx = menuItems[idx]?.subitems?.findIndex(
+                            (x) => x.id == menuId
+                        );
+                        if (subIdx > -1 && menuItems[idx]?.subitems[subIdx].path != "") {
+                            console.log(menuItems[idx]?.subitems[subIdx].path);
+                            router.push(menuItems[idx]?.subitems[subIdx].path);
+                        }
+=======
+>>>>>>> origin/main
                     }
                     setSubChildItemId("");
                 }
@@ -195,6 +247,19 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                     menuItems[idx]?.subitems[cIdx]?.subitems?.some((x) => x.id == menuId)
                 ) {
                     setSubChildItemId(menuId);
+<<<<<<< HEAD
+                    let subIdx = menuItems[idx]?.subitems[cIdx]?.subitems?.findIndex(
+                        (x) => x.id == menuId
+                    );
+                    if (
+                        subIdx > -1 &&
+                        menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path != ""
+                    ) {
+                        console.log(menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path);
+                        router.push(menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path);
+                    }
+=======
+>>>>>>> origin/main
                 }
             }
         }
@@ -204,6 +269,22 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
         return items.map((item) => (
             <div key={item.id} className={styles.menuItem}>
                 <div
+<<<<<<< HEAD
+                    className={`${styles.menuTitle} 
+          ${item.subitems && item.subitems.length > 0 ? styles.hasSubitems : ""
+                        } 
+            ${item.id == parentId && subItemId == ""
+                            ? item.subitems == undefined
+                                ? `${styles.active + " " + styles.selected}`
+                                : styles.active
+                            : ""
+                        }
+            `}
+                    onClick={() => toggleMenu(item.id)}
+                >
+                    {item.icon && <i className={`ki-outline ki-${item.icon} fs-1`}></i>}
+                    {!isCollapsed && <span onClick={handleLinkClick}>{item.title}</span>}
+=======
                     className={`${styles.menuTitle} ${item.subitems && item.subitems.length > 0 ? styles.hasSubitems : ""
                         } 
             ${item.id == parentId && subItemId == "" ? styles.active : ""}`}
@@ -218,11 +299,16 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                         ) : (
                             <span onClick={handleLinkClick}>{item.title}</span>
                         ))}
+>>>>>>> origin/main
                     {!isCollapsed && item.subitems && item.subitems.length > 0 && (
                         <i
                             className={`ki-duotone ${item.id == parentId ? "ki-up" : "ki-down"
                                 }`}
+<<<<<<< HEAD
+                            style={{ marginLeft: "75px" }}
+=======
                             style={{ marginLeft: "auto" }}
+>>>>>>> origin/main
                         ></i>
                     )}
                 </div>
@@ -238,7 +324,13 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                         ? styles.hasSubitems
                                         : ""
                                         } ${subItem.id == subItemId && subChildItemId == ""
+<<<<<<< HEAD
+                                            ? subItem.subitems == undefined
+                                                ? `${styles.active + " " + styles.selected}`
+                                                : styles.active
+=======
                                             ? styles.active
+>>>>>>> origin/main
                                             : ""
                                         }`}
                                     onClick={() => toggleMenu(subItem.id)}
@@ -246,6 +338,11 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                     {subItem.icon && (
                                         <i className={`ki-outline ki-${subItem.icon} fs-1`}></i>
                                     )}
+<<<<<<< HEAD
+                                    {!isCollapsed && (
+                                        <span onClick={handleLinkClick}>{subItem.title}</span>
+                                    )}
+=======
                                     {!isCollapsed &&
                                         (subItem.path ? (
                                             <Link
@@ -258,13 +355,18 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                         ) : (
                                             <span onClick={handleLinkClick}>{subItem.title}</span>
                                         ))}
+>>>>>>> origin/main
                                     {!isCollapsed &&
                                         subItem.subitems &&
                                         subItem.subitems.length > 0 && (
                                             <i
                                                 className={`ki-duotone ${subItem.id == subItemId ? "ki-up" : "ki-down"
                                                     }`}
+<<<<<<< HEAD
+                                                style={{ marginLeft: "79px" }}
+=======
                                                 style={{ marginLeft: "auto" }}
+>>>>>>> origin/main
                                             ></i>
                                         )}
                                 </div>
@@ -281,7 +383,11 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                                         ? styles.hasSubitems
                                                         : ""
                                                         } ${subChildItem.id == subChildItemId
+<<<<<<< HEAD
+                                                            ? styles.active + " " + styles.selected
+=======
                                                             ? styles.active
+>>>>>>> origin/main
                                                             : ""
                                                         }`}
                                                     onClick={() => toggleMenu(subChildItem.id)}
@@ -291,6 +397,13 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                                             className={`ki-outline ki-${subChildItem.icon} fs-1`}
                                                         ></i>
                                                     )}
+<<<<<<< HEAD
+                                                    {!isCollapsed && (
+                                                        <span onClick={handleLinkClick}>
+                                                            {subChildItem.title}
+                                                        </span>
+                                                    )}
+=======
                                                     {!isCollapsed &&
                                                         (subChildItem.path ? (
                                                             <Link
@@ -305,6 +418,7 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                                                                 {subChildItem.title}
                                                             </span>
                                                         ))}
+>>>>>>> origin/main
                                                     {subChildItem.subitems &&
                                                         subChildItem.subitems.length > 0 && (
                                                             <i

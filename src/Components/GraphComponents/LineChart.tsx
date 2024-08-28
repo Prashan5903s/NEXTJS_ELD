@@ -341,12 +341,20 @@ import GraphLabels from './GraphLabels';
 import TimeFields from './TimeFields';
 import Table from './DataTable';
 import { bottom } from '@popperjs/core';
+<<<<<<< HEAD
+import LoadingIcons from 'react-loading-icons';
+=======
+>>>>>>> origin/main
 
 const LazyChart = lazy(() => import('./Chart'));
 
 function LineChart(params = null) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [val, setVal] = useState([]);
+<<<<<<< HEAD
+  const [isLoading, setIsLoading] = useState(false);
+=======
+>>>>>>> origin/main
   ///graph heading
   const graphHeading = 'Graph heading';
 
@@ -386,6 +394,10 @@ function LineChart(params = null) {
       [slug]: [{ color: colors, text: data.name }]
     };
   }) : [];
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
   const data = val['params'] && val['params'][0] ? val['params'][0].map((item) => {
     // Initialize mapI
     let mapI = 0; // Default value
@@ -445,8 +457,13 @@ function LineChart(params = null) {
   // const truckDetails2 = [{ color: 'red', text: '303' }];
   // const truckDetails3 = [{ color: 'green', text: '304' }];
 
+<<<<<<< HEAD
+  // // // Complete data
+  // const datass = [
+=======
   // // Complete data
   // const data = [
+>>>>>>> origin/main
   //   { status: 1, stime: '0:00', etime: '1:10', time: '', truckDetails: truckDetails2 },
   //   { status: 3, stime: '1:10', etime: '3:15', time: '', truckDetails: truckDetails2 },
   //   { status: 1, stime: '3:15', etime: '3:30', time: '', truckDetails: truckDetails1 },
@@ -464,6 +481,10 @@ function LineChart(params = null) {
   //   { status: null, stime: '20:00', etime: '20:00', time: '', truckDetails: truckDetails3 },
   // ];
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
   data.forEach((entry) => {
     entry.time = calculateTimeDifference(entry.stime, entry.etime);
   });
@@ -599,7 +620,11 @@ function LineChart(params = null) {
           </div>
         </div>
       </div>
+<<<<<<< HEAD
+
+=======
       
+>>>>>>> origin/main
     </div>
   );
 }

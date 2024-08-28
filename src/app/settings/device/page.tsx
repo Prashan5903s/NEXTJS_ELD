@@ -1,5 +1,9 @@
 'use client'
+<<<<<<< HEAD
+import React, { useEffect, useState, useCallback } from "react";
+=======
 import React, { useEffect, useState } from "react";
+>>>>>>> origin/main
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -32,7 +36,11 @@ const ActivityTable = () => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
+<<<<<<< HEAD
+    const fetchUsers = async () => {
+=======
     useEffect(() => {
+>>>>>>> origin/main
         function getCookie(name) {
             const nameEQ = `${name}=`;
             const cookies = document.cookie.split(';').map(cookie => cookie.trim());
@@ -48,6 +56,39 @@ const ActivityTable = () => {
 
 
         const token = getCookie("token");
+<<<<<<< HEAD
+        if (!token) {
+            console.error('No token available');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const response = await axios.get(`${url}/setting/driver/devices`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.status >= 200 && response.status < 300) {
+                setDevice(response.data.device);
+            } else {
+                console.error('Unexpected response status:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Debounced fetch function
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
+
+    useEffect(() => {
+        debouncedFetchUsers();
+    }, [debouncedFetchUsers]);
+=======
 
         const fetchUsers = async () => {
             try {
@@ -83,6 +124,7 @@ const ActivityTable = () => {
         fetchUsers();
 
     }, [url]);
+>>>>>>> origin/main
 
 
     if (loading) {

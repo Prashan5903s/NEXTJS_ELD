@@ -1,15 +1,29 @@
 // "use client";
+<<<<<<< HEAD
+// import React, { useEffect, useState, useCallback } from "react";
+// import Link from "next/link";
+// import classes from "./DriverDetails.module.css";
+// import StepLineChart from "./StepLineChart";
+// import { useParams } from "next/navigation";
+// import { debounce } from 'lodash';
+// import Skeleton from "react-loading-skeleton";
+// import dynamic from 'next/dynamic';
+=======
 // import React, { useEffect, useState } from "react";
 // import Link from "next/link";
 // import classes from "./DriverDetails.module.css";
 // import { useParams } from "next/navigation";
 // import Skeleton from "react-loading-skeleton";
+>>>>>>> origin/main
 // import "react-loading-skeleton/dist/skeleton.css";
 // import { useJsApiLoader, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 // import myImage from '../../../public/logo/a.png'; // Ensure this path is correct
 // import LineChart from "../GraphComponents/LineChart";
+<<<<<<< HEAD
+=======
 // import { debounce } from 'lodash';
 // import { getPermissions } from "../permission/page";
+>>>>>>> origin/main
 
 // const mapContainerStyle = {
 //   height: "86vh",
@@ -37,7 +51,11 @@
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState(null);
 //   const [graph, setGraphData] = useState(null);
+<<<<<<< HEAD
+//   const [isLoading, setIsLoading] = useState(false);
+=======
 //   const [permissn, setPermissn] = useState([]);
+>>>>>>> origin/main
 //   const [isDetailOpen, setIsDetailOpen] = useState(false);
 //   const [isHourOpen, setIsHourOpen] = useState(false);
 //   const [mapLoaded, setMapLoaded] = useState(false);
@@ -47,6 +65,12 @@
 //   const { slug } = useParams();
 
 //   function getCookie(name) {
+<<<<<<< HEAD
+//     if (typeof window === "undefined") {
+//       return null;
+//     }
+=======
+>>>>>>> origin/main
 //     const nameEQ = name + "=";
 //     const ca = document.cookie.split(";");
 
@@ -58,6 +82,20 @@
 
 //     return null;
 //   }
+<<<<<<< HEAD
+
+//   const token = getCookie("token");
+
+//   const fetchData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
+
+//       try {
+//         const response = await fetch(`${BackEND}/driver/detail/${slug}`, {
+//           method: 'GET',
+//           headers: {
+//             'Content-Type': 'application/json',
+=======
 //   const token = getCookie("token");
 
 //   const fetchPermissions = debounce(async (setPermissn) => {
@@ -82,16 +120,24 @@
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
+>>>>>>> origin/main
 //             Authorization: `Bearer ${token}`,
 //           },
 //         });
 
+<<<<<<< HEAD
+//         if (!response.ok) {
+//           const errorText = await response.text();
+//           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+//           console.log(`Error details: ${errorText}`);
+=======
 //         console.log('Response:', response.ok);
 
 //         if (!response.ok) {
 //           const errorText = await response.text(); // Get the response body text for more details
 //           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
 //           console.log(`Error details: ${errorText}`); // Log the detailed error message
+>>>>>>> origin/main
 //           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
 //         }
 
@@ -102,6 +148,58 @@
 //       } finally {
 //         setLoading(false);
 //       }
+<<<<<<< HEAD
+//     }, 1000), // Debounce delay in milliseconds
+//     [] // Dependency array for useCallback
+//   );
+
+//   useEffect(() => {
+//     fetchData(slug, token);
+//   }, [slug, token, fetchData]);
+
+
+//   const fetchMapData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
+
+//       setLoading(true); // Start loading before fetching data
+//       try {
+//         const response = await fetch(`${BackEND}/driver/location/data/${slug}`, {
+//           method: 'GET',
+//           headers: {
+//             'Content-Type': 'application/json',
+//             Authorization: `Bearer ${token}`,
+//           },
+//         });
+
+//         if (!response.ok) {
+//           const errorText = await response.text(); // Get the response body text for more details
+//           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+//           console.log(`Error details: ${errorText}`);
+//           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+//         }
+
+//         const results = await response.json();
+//         setMapData(results);
+//       } catch (err) {
+//         setError(err.message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     }, 1000), // Debounce delay in milliseconds
+//     [BackEND] // Dependency array for useCallback
+//   );
+
+//   useEffect(() => {
+//     fetchMapData(slug, token);
+//   }, [slug, token, fetchMapData]);
+
+//   const fetchGraphData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
+
+//       setIsLoading(true); // Start loading before fetching data
+=======
 //     };
 
 //     fetchData();
@@ -110,6 +208,7 @@
 //   useEffect(() => {
 
 //     const graphData = async () => {
+>>>>>>> origin/main
 //       try {
 //         const response = await fetch(`${BackEND}/graph/chart/data/${slug}`, {
 //           method: "GET",
@@ -125,16 +224,32 @@
 
 //         const results = await response.json();
 
+<<<<<<< HEAD
+//         setGraphData(results);
+
+//       } catch (err) {
+//         setIsLoading(false);
+=======
 //         console.log('Result', results);
 
 
 //         setGraphData(results);
 
 //       } catch (err) {
+>>>>>>> origin/main
 //         setError(err.message);
 //       } finally {
 //         setLoading(false);
 //       }
+<<<<<<< HEAD
+//     }, 1000), // Debounce delay in milliseconds
+//     [BackEND] // Dependency array for useCallback
+//   );
+
+//   useEffect(() => {
+//     fetchGraphData(slug, token);
+//   }, [slug, token, fetchGraphData]);
+=======
 //     };
 
 //     graphData();
@@ -180,6 +295,7 @@
 //     fetchMapData();
 //   }, [slug, token, BackEND]);
 
+>>>>>>> origin/main
 
 //   useEffect(() => {
 //     if (!Array.isArray(mapData) || mapData.length === 0) return;
@@ -233,11 +349,20 @@
 //       });
 //     };
 
+<<<<<<< HEAD
+
+//     const updateMarkerIcons = async () => {
+//       const icons = {};
+//       for (const vehicle of vehicleDatas) {
+//         const rotatedIcon = await createRotatedIcon(myImage.src, vehicle.rotation);
+//         icons[vehicle.name] = rotatedIcon;
+=======
 //     const updateMarkerIcons = async () => {
 //       const icons = {};
 //       for (const vehicle of vehicleDatas) {
 //         const rotatedIcon = await createRotatedIcon(myImage.src, vehicle?.rotation);
 //         icons[vehicle?.name] = rotatedIcon;
+>>>>>>> origin/main
 //       }
 //       setMarkerIcons(icons);
 //     };
@@ -245,6 +370,23 @@
 //     updateMarkerIcons();
 //   }, [vehicleDatas, myImage]);
 
+<<<<<<< HEAD
+//   useEffect(() => {
+//     const handleZoom = (event) => {
+//       if (window.innerWidth > 2500 && (event.ctrlKey || event.metaKey)) {
+//         if (event.key === '-') {
+//           event.preventDefault();
+//         }
+//       }
+//     };
+
+//     document.addEventListener('keydown', handleZoom);
+//     return () => {
+//       document.removeEventListener('keydown', handleZoom);
+//     };
+//   }, []);
+=======
+>>>>>>> origin/main
 //   const handleMapLoad = () => {
 //     setMapLoaded(true);
 //   };
@@ -278,6 +420,16 @@
 //     setIsHourOpen(!isHourOpen);
 //   };
 
+<<<<<<< HEAD
+'use client'
+import React, {  useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import classes from "./DriverDetails.module.css";
+import { useParams } from "next/navigation";
+import { debounce } from 'lodash';
+import Skeleton from "react-loading-skeleton";
+import dynamic from 'next/dynamic';
+=======
 //   return (
 
 //     <div className="container-fluid">
@@ -762,6 +914,7 @@ import classes from "./DriverDetails.module.css";
 import StepLineChart from "./StepLineChart";
 import { useParams } from "next/navigation";
 import Skeleton from "react-loading-skeleton";
+>>>>>>> origin/main
 import "react-loading-skeleton/dist/skeleton.css";
 import { useJsApiLoader, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 import myImage from '../../../public/logo/a.png'; // Ensure this path is correct
@@ -780,11 +933,14 @@ const center = {
 export default function Driverdetails() {
   const BackEND = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   const MapKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_KEY;
+<<<<<<< HEAD
+=======
   // const [display, setDisplay] = useState(false);
 
   // useEffect(() => {
   //   setTimeout(() => setDisplay(true), 10000);
   // }, []);
+>>>>>>> origin/main
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -798,6 +954,10 @@ export default function Driverdetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [graph, setGraphData] = useState(null);
+<<<<<<< HEAD
+  const [isLoading, setIsLoading] = useState(false);
+=======
+>>>>>>> origin/main
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isHourOpen, setIsHourOpen] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -807,6 +967,12 @@ export default function Driverdetails() {
   const { slug } = useParams();
 
   function getCookie(name) {
+<<<<<<< HEAD
+    if (typeof window === "undefined") {
+      return null;
+    }
+=======
+>>>>>>> origin/main
     const nameEQ = name + "=";
     const ca = document.cookie.split(";");
 
@@ -818,6 +984,20 @@ export default function Driverdetails() {
 
     return null;
   }
+<<<<<<< HEAD
+
+  const token = getCookie("token");
+
+  const fetchData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
+
+      try {
+        const response = await fetch(`${BackEND}/driver/detail/${slug}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+=======
   const token = getCookie("token");
 
   useEffect(() => {
@@ -829,14 +1009,21 @@ export default function Driverdetails() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+>>>>>>> origin/main
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
+<<<<<<< HEAD
+          const errorText = await response.text();
+          console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+          console.log(`Error details: ${errorText}`);
+=======
           const errorText = await response.text(); // Get the response body text for more details
           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
           console.log(`Error details: ${errorText}`); // Log the detailed error message
+>>>>>>> origin/main
           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
@@ -847,6 +1034,26 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
+<<<<<<< HEAD
+    }, 1000), // Debounce delay in milliseconds
+    [] // Dependency array for useCallback
+  );
+
+  useEffect(() => {
+    fetchData(slug, token);
+  }, [slug, token, fetchData]);
+
+  const fetchMapData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
+
+      setLoading(true); // Start loading before fetching data
+      try {
+        const response = await fetch(`${BackEND}/driver/location/data/${slug}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+=======
     };
 
     fetchData();
@@ -862,12 +1069,20 @@ export default function Driverdetails() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+>>>>>>> origin/main
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
+<<<<<<< HEAD
+          const errorText = await response.text(); // Get the response body text for more details
+          console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+          console.log(`Error details: ${errorText}`);
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+=======
           throw new Error("Network response was not ok");
+>>>>>>> origin/main
         }
 
         const results = await response.json();
@@ -877,6 +1092,21 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
+<<<<<<< HEAD
+    }, 1000), // Debounce delay in milliseconds
+    [BackEND] // Dependency array for useCallback
+  );
+
+  useEffect(() => {
+    fetchMapData(slug, token);
+  }, [slug, token, fetchMapData]);
+
+  const fetchGraphData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
+
+      setIsLoading(true); // Start loading before fetching data
+=======
     };
 
     fetchMapData();
@@ -885,6 +1115,7 @@ export default function Driverdetails() {
   useEffect(() => {
 
     const graphData = async () => {
+>>>>>>> origin/main
       try {
         const response = await fetch(`${BackEND}/graph/chart/data/${slug}`, {
           method: "GET",
@@ -903,15 +1134,29 @@ export default function Driverdetails() {
         setGraphData(results);
 
       } catch (err) {
+<<<<<<< HEAD
+        setIsLoading(false);
+=======
+>>>>>>> origin/main
         setError(err.message);
       } finally {
         setLoading(false);
       }
+<<<<<<< HEAD
+    }, 1000), // Debounce delay in milliseconds
+    [BackEND] // Dependency array for useCallback
+  );
+
+  useEffect(() => {
+    fetchGraphData(slug, token);
+  }, [slug, token, fetchGraphData]);
+=======
     };
 
     graphData();
 
   }, [slug, token]);
+>>>>>>> origin/main
 
   useEffect(() => {
     if (!Array.isArray(mapData) || mapData.length === 0) return;
@@ -980,11 +1225,14 @@ export default function Driverdetails() {
 
   useEffect(() => {
     const handleZoom = (event) => {
+<<<<<<< HEAD
+=======
       // if (window.innerWidth < 2000 && (event.ctrlKey || event.metaKey)) {
       //   if (event.key === '+' || event.key === '=') {
       //     event.preventDefault();
       //   }
       // }
+>>>>>>> origin/main
       if (window.innerWidth > 2500 && (event.ctrlKey || event.metaKey)) {
         if (event.key === '-') {
           event.preventDefault();
@@ -997,6 +1245,10 @@ export default function Driverdetails() {
       document.removeEventListener('keydown', handleZoom);
     };
   }, []);
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/main
   const handleMapLoad = () => {
     setMapLoaded(true);
   };
@@ -1030,8 +1282,11 @@ export default function Driverdetails() {
     setIsHourOpen(!isHourOpen);
   };
 
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> origin/main
   return (
     <div className="container-fluid" style={{ minWidth: '1200px', overflow: 'auto' }}>
       <div className="row">
@@ -1043,14 +1298,22 @@ export default function Driverdetails() {
             <i className="ki-duotone ki-left"></i> Back
           </Link>
           <h3 className="align-items-start flex-column fs-2 fw-bold text-gray-800 mt-5">
+<<<<<<< HEAD
+            {data && data[0] && data[0].first_name} {data && data[0] && data[0].last_name}
+=======
             {data[0] && data[0].first_name} {data[0] && data[0].last_name}
+>>>>>>> origin/main
           </h3>
           <div className="mb-4">
             <i className="ki-duotone ki-phone align-middle fs-4">
               <span className="path1"></span>
               <span className="path2"></span>
             </i>
+<<<<<<< HEAD
+            <span className="fs-7">{data && data[0] && data[0].mobile_no}</span>
+=======
             <span className="fs-7">{data[0].mobile_no}</span>
+>>>>>>> origin/main
           </div>
           <div>
             <span className="fs-7">
@@ -1098,7 +1361,11 @@ export default function Driverdetails() {
                     <div>
                       <p>Driver License</p>
                     </div>
+<<<<<<< HEAD
+                    <div>{data && data[3] && data[3].licenseNumber}</div>
+=======
                     <div>{data[3].licenseNumber}</div>
+>>>>>>> origin/main
                   </div>
                 </div>
               )}
@@ -1137,7 +1404,13 @@ export default function Driverdetails() {
                   <div className="fs-7">
                     <div className={`d-flex justify-content-around mt-4`}>
                       <div className={`${classes.chartDiv}`} >
+<<<<<<< HEAD
+                        {isLoading ?
+                          <LineChart params={graph} /> : ""
+                        }
+=======
                         <LineChart params={graph} />
+>>>>>>> origin/main
                       </div>
                     </div></div>
                   <table>

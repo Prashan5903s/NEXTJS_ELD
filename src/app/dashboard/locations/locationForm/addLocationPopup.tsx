@@ -1,6 +1,14 @@
+<<<<<<< HEAD
+'use client'
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import LoadingIcons from 'react-loading-icons';
+=======
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+>>>>>>> origin/main
 
 const formValidations = {
   name: {
@@ -24,6 +32,14 @@ const formValidations = {
   address_type: {
     required: "Address type is required",
   },
+<<<<<<< HEAD
+  tags: {
+    // Optional field
+  },
+  note: {
+    // Optional field
+  },
+=======
   vin: {
     required: "VIN is required",
     minLength: {
@@ -99,6 +115,7 @@ const formValidations = {
     },
   },
   notes: {},
+>>>>>>> origin/main
 };
 
 const getCookie = (name) => {
@@ -114,6 +131,23 @@ const getCookie = (name) => {
   return null;
 };
 
+<<<<<<< HEAD
+const debounce = (func, delay) => {
+  let timeout;
+  return (...args) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), delay);
+  };
+};
+
+const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
+  const [locationField, setLocationField] = useState({
+    name: "",
+    address: "",
+    address_type: "",
+    tags: "",
+    note: "",
+=======
 const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
   const [vehicleField, setVehicleField] = useState({
     name: "",
@@ -127,10 +161,24 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     throttle_wifi: 0,
     notes: "",
     license_plate: "",
+>>>>>>> origin/main
   });
 
   const [errors, setErrors] = useState({});
   const router = useRouter();
+<<<<<<< HEAD
+  const [isLoading, setIsLoading] = useState(false);
+  const [editData, setEditData] = useState();
+  const [loctn, setLoctn] = useState({});
+  const [authenticated, setAuthenticated] = useState(false);
+  const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+  const changeVehicleFieldHandler = (e) => {
+    const { name, value } = e.target;
+    setLocationField({
+      ...locationField,
+      [name]: value,
+=======
   const [editData, setEditData] = useState();
   const [formValue, setFormValue] = useState({});
   const [loctn, setLoctn] = useState();
@@ -140,6 +188,7 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     setVehicleField({
       ...vehicleField,
       [e.target.name]: e.target.value,
+>>>>>>> origin/main
     });
   };
 
@@ -147,9 +196,33 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     let isValid = true;
     let errors = {};
 
+<<<<<<< HEAD
+    ["name", "address", "address_type"].forEach((key) => {
+      if (formValidations[key]?.required && !locationField[key]) {
+        errors[key] = formValidations[key].required;
+        isValid = false;
+      }
+    });
+
+    if (locationField.name && formValidations.name) {
+      if (locationField.name.length > formValidations.name.maxLength.value) {
+        errors.name = formValidations.name.maxLength.message;
+        isValid = false;
+      }
+      if (!formValidations.name.pattern.value.test(locationField.name)) {
+        errors.name = formValidations.name.pattern.message;
+        isValid = false;
+      }
+    }
+
+    if (locationField.address && formValidations.address) {
+      if (locationField.address.length > formValidations.address.maxLength.value) {
+        errors.address = formValidations.address.maxLength.message;
+=======
     for (const [key, value] of Object.entries(formValidations)) {
       if (value.required && !vehicleField[key]) {
         errors[key] = `${key.replace(/_/g, " ")} is required`;
+>>>>>>> origin/main
         isValid = false;
       }
     }
@@ -158,6 +231,52 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     return isValid;
   };
 
+<<<<<<< HEAD
+  const handleFormSubmission = async () => {
+    const token = getCookie("token");
+    if (!token) {
+      console.error("No token available");
+      return;
+    }
+    try {
+      setIsLoading(true);
+
+      const apiUrl = id ? `${url}/asset/location/${id}` : `${url}/asset/location`;
+      const method = id ? "put" : "post";
+
+      const response = await axios({
+        method,
+        url: apiUrl,
+        data: locationField,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        updatedLocationData(); // Refresh the location list
+        close(false); // Close the modal
+        router.push("/dashboard/locations"); // Redirect
+      } else {
+        console.error("Failed to save/update:", response.data);
+      }
+    } catch (error) {
+      console.error("API error:", error.response?.data || error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const debouncedFormSubmission = debounce(handleFormSubmission, 300);
+
+  const onSubmitChange = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      debouncedFormSubmission();
+    }
+  };
+
+=======
   const onSubmitChange = async (e) => {
     e.preventDefault();
     if (id) {
@@ -211,6 +330,7 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
 
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
+>>>>>>> origin/main
   useEffect(() => {
     const token = getCookie("token");
 
@@ -257,7 +377,11 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
           },
         });
 
+<<<<<<< HEAD
+        setLoctn(response?.data || {});
+=======
         setLoctn(response?.data);
+>>>>>>> origin/main
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -266,10 +390,16 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     fetchData();
   }, [url]);
 
+<<<<<<< HEAD
+  useEffect(() => {
+    async function fetchEditData() {
+      if (!id) return; // Only fetch if `id` exists
+=======
   console.log("Location", loctn?.address_types);
 
   useEffect(() => {
     async function fetchEditData() {
+>>>>>>> origin/main
       const token = getCookie("token");
 
       if (!token) {
@@ -279,7 +409,11 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
 
       try {
         const response = await axios.get(
+<<<<<<< HEAD
+          `${url}/asset/location/${id}/edit`,
+=======
           `${url}/transport/vehicle/${id}/edit`,
+>>>>>>> origin/main
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -287,6 +421,23 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
           }
         );
 
+<<<<<<< HEAD
+        const { location } = response.data;
+        setEditData(location);
+        setLocationField({
+          name: location.name || "",
+          address: location.address || "",
+          address_type: location.type || "", // Assuming `type` corresponds to `address_type`
+          tags: location.tags || "",
+          note: location.note || "",
+        });
+      } catch (error) {
+        console.error("Error fetching edit data:", error);
+      }
+    }
+
+    fetchEditData();
+=======
         setEditData(response.data);
         setVehicleField({
           ...vehicleField,
@@ -300,11 +451,22 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
     if (id) {
       fetchEditData();
     }
+>>>>>>> origin/main
   }, [url, id]);
 
   return (
     <div
       className={`modal ${open ? "showpopup" : ""}`}
+<<<<<<< HEAD
+      style={{ display: open ? "block" : "none" }}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div className="modal-dialog modal-dialog-centered w-95 h-90 mw-650px mh-350px">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h2 className="fw-bold">{id ? "Edit Location" : "Add Location"}</h2>
+=======
       style={{ display: "block" }}
       aria-modal="true"
       role="dialog"
@@ -317,6 +479,7 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
             ) : (
               <h2 className="fw-bold">Add Location</h2>
             )}
+>>>>>>> origin/main
             <div
               className="btn btn-icon btn-sm btn-active-icon-primary"
               data-bs-dismiss="modal"
@@ -331,19 +494,30 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
             <form
               id="kt_modal_add_vehicle_form"
               className="form fv-plugins-bootstrap5 fv-plugins-framework"
+<<<<<<< HEAD
+              onSubmit={onSubmitChange}
+=======
+>>>>>>> origin/main
             >
               {Object.keys(formValidations).map((field, index) => (
                 <div className="fv-row mb-7" key={index}>
                   <label className="fs-6 fw-semibold form-label mb-2">
                     <span
                       className={
+<<<<<<< HEAD
+                        formValidations[field]?.required ? "required" : ""
+=======
                         formValidations[field].required ? "required" : ""
+>>>>>>> origin/main
                       }
                     >
                       {field.replace(/_/g, " ").toUpperCase()}
                     </span>
                   </label>
 
+<<<<<<< HEAD
+                  {field === "address" || field === "note" ? (
+=======
                   {field === "make" ? (
                     <select
                       className="form-select form-select-solid"
@@ -393,16 +567,46 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
                       ))}
                     </select>
                   ) : field === "address" ? (
+>>>>>>> origin/main
                     <textarea
                       className="form-control form-control-solid"
                       placeholder={`Enter ${field.replace(/_/g, " ")}`}
                       name={field}
                       onChange={changeVehicleFieldHandler}
+<<<<<<< HEAD
+                      value={locationField[field]}
+=======
                       value={vehicleField[field]}
+>>>>>>> origin/main
                     />
                   ) : field === "address_type" ? (
                     <div className="d-flex flex-wrap gap-3 mt-3 mb-2">
                       {loctn?.address_types &&
+<<<<<<< HEAD
+                        Object.entries(loctn.address_types).map(([key, value]) => (
+                          <div key={key}>
+                            <input
+                              className="form-check-input me-3 cursor-pointer"
+                              name="address_type"
+                              type="radio"
+                              value={key}
+                              id={key}  // Ensure this ID is unique
+                              onChange={changeVehicleFieldHandler}
+                              checked={locationField.address_type == key}
+                            />
+                            <label
+                              className="form-check-label fs-6"
+                              htmlFor={key} // Use the same ID as in the input
+                            >
+                              {value}
+                            </label>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+=======
                         Object.entries(loctn.address_types).map(
                           ([key, value]) => (
                             <div key={key}>
@@ -442,10 +646,38 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
                   ) : (
                     <input
                       type={field.includes("password") ? "password" : "text"}
+>>>>>>> origin/main
                       className="form-control form-control-solid"
                       placeholder={`Enter ${field.replace(/_/g, " ")}`}
                       name={field}
                       onChange={changeVehicleFieldHandler}
+<<<<<<< HEAD
+                      value={locationField[field]}
+                    />
+                  )}
+                  {errors[field] && (
+                    <div className="text-danger mt-2">{errors[field]}</div>
+                  )}
+                </div>
+              ))}
+
+              <div className="form-btn-grp w-100 text-center pt-15">
+                <div className="form-btn-grp w-100 text-center pt-15">
+                  <button
+                    type="reset"
+                    className="btn-light me-3"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                  >
+                    Discard
+                  </button>
+                  <button id='kt_sign_in_submit' className='justify-content-center btn-primary'>
+                    <span className='indicator-progress d-flex justify-content-center'>
+                      {isLoading ? <LoadingIcons.TailSpin height={18} /> : id ? "Update" : "Save"}
+                    </span>
+                  </button>
+                </div>
+=======
                       value={vehicleField[field]}
                     />
                   )}
@@ -477,6 +709,7 @@ const AddLocationModal = ({ id, close, open, updateVehiclesList }) => {
                     <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
                   </span>
                 </button>
+>>>>>>> origin/main
               </div>
             </form>
           </div>

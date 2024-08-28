@@ -1,5 +1,9 @@
 'use client';
+<<<<<<< HEAD
+import React, { useEffect, useState, useCallback } from "react";
+=======
 import React, { useEffect, useState } from "react";
+>>>>>>> origin/main
 import AddLocationModal from "./locationForm/addLocationPopup";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -8,6 +12,34 @@ import { getPermissions } from "@/Components/permission/page";
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net';
 import $ from 'jquery';
+<<<<<<< HEAD
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
+const LocationTable = () => {
+    const [showModal, setShowModal] = useState(false);
+    const [locationData, setLocationData] = useState([]);
+    const [modalMode, setModalMode] = useState('add');
+    const [selectedLocationId, setSelectedLocationId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+    const router = useRouter();
+    const [authenticated, setAuthenticated] = useState(false);
+    const [permissions, setPermissions] = useState([]);
+
+    const fetchPermissions = debounce(async () => {
+        try {
+            const perms = await getPermissions();
+            setPermissions(perms);
+        } catch (error) {
+            console.error('Error fetching permissions:', error);
+        }
+    }, 300);
+
+    useEffect(() => {
+        fetchPermissions();
+    }, []);
+=======
 import dynamic from 'next/dynamic';
 
 const VehicleTable = () => {
@@ -32,6 +64,7 @@ const VehicleTable = () => {
     useEffect(() => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
+>>>>>>> origin/main
 
     const formattedDate = (dateString) => {
         const date = new Date(dateString);
@@ -39,10 +72,17 @@ const VehicleTable = () => {
         return date.toLocaleDateString('en-US', options);
     };
 
+<<<<<<< HEAD
+    const openModal = (mode, locationId = null) => {
+        setModalMode(mode);
+        setSelectedLocationId(locationId);
+        setShowModal(true); // Ensure the modal is opened after setting the mode and ID
+=======
     const openModal = (mode, vehicleId = null) => {
         setModalMode(mode);
         setSelectedVehicleId(vehicleId);
         setShowModal(true);
+>>>>>>> origin/main
     };
 
     const toggleModal = () => {
@@ -62,6 +102,8 @@ const VehicleTable = () => {
         return null;
     };
 
+<<<<<<< HEAD
+=======
     const fetchLocation = async () => {
         try {
             const token = getCookie("token");
@@ -76,6 +118,7 @@ const VehicleTable = () => {
         }
     };
 
+>>>>>>> origin/main
     useEffect(() => {
         const token = getCookie("token");
         if (token) {
@@ -85,7 +128,11 @@ const VehicleTable = () => {
                 .then((response) => {
                     setAuthenticated(true);
                     if (response.data.user_type === "TR") {
+<<<<<<< HEAD
+                        // Handle TR user
+=======
                         // Do something specific for TR users
+>>>>>>> origin/main
                     } else if (response.data.user_type === "EC") {
                         router.replace("/company/dashboard");
                     } else {
@@ -105,16 +152,56 @@ const VehicleTable = () => {
     }, [router]);
 
     useEffect(() => {
+<<<<<<< HEAD
+        if (locationData.length > 0) {
+            const tableInstance = $('#locationTable').DataTable({
+                paging: true,
+                searching: true,
+                destroy: true,
+=======
         const initializeDataTable = () => {
             const table = $('#locationTable').DataTable({
                 paging: true,
                 searching: true,
                 destroy: true, // Ensure old instances are destroyed
+>>>>>>> origin/main
                 initComplete: function () {
                     $('#locationTable_filter').detach().appendTo('.searchBar');
                 }
             });
 
+<<<<<<< HEAD
+            return () => {
+                tableInstance.destroy(); // Correctly destroy the table instance
+            };
+        }
+    }, [locationData]);
+
+    // Function to fetch location data
+    const fetchLocation = async () => {
+        setLoading(true); // Set loading to true when starting to fetch data
+        try {
+            const token = getCookie("token");
+            if (!token) return;
+
+            const response = await axios.get(`${url}/asset/location`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            setLocationData(response.data.locations || []);
+        } catch (error) {
+            console.error('Error fetching location data:', error);
+        } finally {
+            setLoading(false); // Set loading to false when data fetching is complete
+        }
+    };
+
+    // Debounced fetchLocation function
+    const debouncedFetchLocation = useCallback(debounce(fetchLocation, 300), [url]);
+
+    // Function to update location list
+    const updateLocationList = () => {
+        debouncedFetchLocation(); // Refresh the location list with debouncing
+=======
             return table;
         };
 
@@ -132,6 +219,7 @@ const VehicleTable = () => {
 
     const updateVehiclesList = () => {
         fetchLocation(); // Refresh the vehicle list
+>>>>>>> origin/main
     };
 
     return (
@@ -148,7 +236,11 @@ const VehicleTable = () => {
                         <div className="search" id="search-container">
                             {/* Search input will be moved by DataTable's initComplete */}
                         </div>
+<<<<<<< HEAD
+                        {permissions.includes(4) && (
+=======
                         {permissn.includes(1) && (
+>>>>>>> origin/main
                             <div className="btnGroup">
                                 <button onClick={() => openModal('add')} className="btn-primary">
                                     <i className='ki-outline ki-plus-square fs-3 mr-2' style={{ marginRight: '8px' }}></i>
@@ -159,6 +251,90 @@ const VehicleTable = () => {
                     </div>
                     <div className="dataTables_wrapper dt-bootstrap4 no-footer">
                         <div className="table-responsive">
+<<<<<<< HEAD
+                            {loading ? (
+                                <table className="table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_tr_u_table">
+                                    <thead>
+                                        <tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                                            <th className="min-w-125px" style={{ width: 308.733 }}>NAME</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>ADDRESS</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>ADDRESS TYPE</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>HIGH ACCELERATING SETTING TYPE</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>NOTES</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>STATUS</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>CREATED</th>
+                                            <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-600 fw-semibold">
+                                        {[...Array(5)].map((_, index) => (
+                                            <tr key={index}>
+                                                <td className="d-flex align-items-center">
+                                                    <div className="symbol symbol-circle symbol-50px overflow-hidden me-3">
+                                                        <Skeleton circle={true} height={50} width={50} />
+                                                    </div>
+                                                    <div className="d-flex flex-column">
+                                                        <Skeleton width={100} />
+                                                        <Skeleton width={150} />
+                                                    </div>
+                                                </td>
+                                                <td><Skeleton width={100} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td className="text-end"><Skeleton width={100} /></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <table id="locationTable" className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
+                                    <thead>
+                                        <tr className="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                            <th className="min-w-125px">Name</th>
+                                            <th className="min-w-125px">Address</th>
+                                            <th className="min-w-125px">Harsh Acceleration Setting Type</th>
+                                            <th className="min-w-125px">Notes</th>
+                                            <th className="min-w-125px">Status</th>
+                                            <th className="min-w-125px">Created</th>
+                                            <th className="text-end min-w-100px">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="fw-semibold text-gray-600">
+                                        {locationData && locationData.map(data => (
+                                            <tr key={data.id}>
+                                                <td>{data.name}</td>
+                                                <td>{data.address}</td>
+                                                <td>{data.tags}</td>
+                                                <td>{data.note}</td>
+                                                <td>
+                                                    <div className={`badge badge-light-${data.status ? 'success' : 'danger'}`}>
+                                                        {data.status ? 'Active' : 'De-active'}
+                                                    </div>
+                                                </td>
+                                                <td>{formattedDate(data.created_at)}</td>
+                                                <td className="text-end">
+                                                    {permissions.includes(5) && (
+                                                        <button className="btn btn-icon btn-active-light-primary w-30px h-30px me-3" onClick={() => openModal('edit', data.id)}>
+                                                            <i className="ki ki-outline ki-pencil fs-3"></i>
+                                                        </button>
+                                                    )}
+                                                    <label className="form-switch form-check-solid">
+                                                        <input
+                                                            className="form-check-input border"
+                                                            type="checkbox"
+                                                            value=""
+                                                            checked={data.status}
+                                                            onChange={() => {/* handle change */ }}
+                                                        />
+                                                    </label>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+=======
                             <table id="locationTable" className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
                                 <thead>
                                     <tr className="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
@@ -198,13 +374,22 @@ const VehicleTable = () => {
                                     ))}
                                 </tbody>
                             </table>
+>>>>>>> origin/main
                         </div>
                     </div>
                 </div>
             </div>
+<<<<<<< HEAD
+            {showModal && <AddLocationModal id={selectedLocationId} open={showModal} close={toggleModal} updatedLocationData={updateLocationList} />}
+=======
             {showModal && <AddLocationModal id={selectedVehicleId} open={showModal} close={toggleModal} updateVehiclesList={updateVehiclesList} />}
+>>>>>>> origin/main
         </div>
     );
 };
 
+<<<<<<< HEAD
+export default LocationTable;
+=======
 export default VehicleTable;
+>>>>>>> origin/main

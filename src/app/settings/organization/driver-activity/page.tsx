@@ -1,5 +1,9 @@
 'use client'
+<<<<<<< HEAD
+import React, { useEffect, useState, useCallback } from "react";
+=======
 import React, { useEffect, useState } from "react";
+>>>>>>> origin/main
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -32,7 +36,12 @@ const ActivityTable = () => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
+<<<<<<< HEAD
+    const fetchUsers = async () => {
+        
+=======
     useEffect(() => {
+>>>>>>> origin/main
         function getCookie(name) {
             const nameEQ = `${name}=`;
             const cookies = document.cookie.split(';').map(cookie => cookie.trim());
@@ -48,6 +57,39 @@ const ActivityTable = () => {
 
         const token = getCookie("token");
 
+<<<<<<< HEAD
+        if (!token) {
+            console.error('No token available');
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const response = await axios.get(`${url}/driver/work/activity`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.status >= 200 && response.status < 300) {
+                setActivity(response.data.driverShift);
+            } else {
+                console.error('Unexpected response status:', response.status);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Debounced fetch function
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
+
+    useEffect(() => {
+        debouncedFetchUsers();
+    }, [debouncedFetchUsers]);
+=======
         const fetchUsers = async () => {
             try {
                 const token = getCookie("token");
@@ -79,6 +121,7 @@ const ActivityTable = () => {
 
     console.log('Driver activity', activity);
 
+>>>>>>> origin/main
 
     if (loading) {
         // Render loading effect while data is being fetched
@@ -232,7 +275,11 @@ const ActivityTable = () => {
                                         <th className="min-w-125px" style={{ width: 125 }}>Vehicle</th>
                                         <th className="min-w-125px" style={{ width: 125 }}>Current shift status</th>
                                         <th className="min-w-125px" style={{ width: 125 }}>Message reason</th>
+<<<<<<< HEAD
+                                        {permissn.includes(31) && (
+=======
                                         {permissn.includes(11) && (
+>>>>>>> origin/main
                                             <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
                                         )}
                                     </tr>
@@ -249,7 +296,11 @@ const ActivityTable = () => {
                                             </td>
                                             <td>{data?.option?.title}</td>
                                             <td>{data?.message_reason}</td>
+<<<<<<< HEAD
+                                            {permissn.includes(31) && (
+=======
                                             {permissn.includes(11) && (
+>>>>>>> origin/main
                                                 <td className="text-end">
                                                     <Link href={`./driver-activity/${data.id}`} className="btn btn-light btn-active-light-primary btn-flex btn-center btn-sm">
                                                         Actions <i className="ki ki-outline ki-down fs-5 ms-1"></i>
