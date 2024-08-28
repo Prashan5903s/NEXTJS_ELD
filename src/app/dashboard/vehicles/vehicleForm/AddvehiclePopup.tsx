@@ -1,8 +1,14 @@
+<<<<<<< HEAD
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { debounce } from 'lodash';
 import LoadingIcons from 'react-loading-icons';
+=======
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+>>>>>>> origin/main
 
 const formValidations = {
     name: {
@@ -12,8 +18,13 @@ const formValidations = {
             message: "Name must be at most 60 characters long",
         },
         pattern: {
+<<<<<<< HEAD
             value: /^[A-Za-z0-9\s]+$/i,
             message: "Name should be only alphanumeric characters and spaces",
+=======
+            value: /^[A-Za-z\s]+$/i,
+            message: "Name should be only alphabetic characters and spaces",
+>>>>>>> origin/main
         },
     },
     vin: {
@@ -44,8 +55,13 @@ const formValidations = {
             message: "Model must be at most 60 characters long",
         },
         pattern: {
+<<<<<<< HEAD
             value: /^[A-Za-z0-9\s]+$/i,
             message: "Name should be only alphanumeric characters and spaces",
+=======
+            value: /^[A-Za-z]+$/i,
+            message: "Model should be only alphabetic characters",
+>>>>>>> origin/main
         },
     },
     year: {
@@ -66,7 +82,11 @@ const formValidations = {
         },
     },
     fuel_tank_secondary: {
+<<<<<<< HEAD
         required: "Fuel tank secondary is required",
+=======
+        required: "License state is required",
+>>>>>>> origin/main
         maxLength: {
             value: 4,
             message: "Fuel tank secondary must be at most 4 characters long",
@@ -77,7 +97,11 @@ const formValidations = {
         },
     },
     throttle_wifi: {
+<<<<<<< HEAD
         required: "Throttle Wifi is required",
+=======
+        required: "Throttle Wifi  is required",
+>>>>>>> origin/main
     },
     license_plate: {
         required: "License Plate is required",
@@ -94,6 +118,7 @@ const formValidations = {
 };
 
 const getCookie = (name) => {
+<<<<<<< HEAD
     const nameEQ = name + "=";
     const ca = document.cookie.split(";");
     for (let i = 0; i < ca.length; i++) {
@@ -104,6 +129,21 @@ const getCookie = (name) => {
     return null;
 };
 
+=======
+    const nameEQ = `${name}=`;
+    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+
+    for (const cookie of cookies) {
+        if (cookie.startsWith(nameEQ)) {
+            return cookie.substring(nameEQ.length);
+        }
+    }
+
+    return null;
+};
+
+
+>>>>>>> origin/main
 const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
     const [vehicleField, setVehicleField] = useState({
         name: "",
@@ -111,6 +151,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         make: "",
         model: "",
         year: "",
+<<<<<<< HEAD
         fuel_type: "",
         fuel_tank_primary: "",
         fuel_tank_secondary: "",
@@ -128,6 +169,21 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
     const [licenseStates, setLicenseStates] = useState([]);
     const router = useRouter();
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+=======
+        fuel_type: '',
+        fuel_type_primary: '',
+        fuel_type_secondary: '',
+        throttle_wifi: 0,
+        notes: "",
+        license_plate: "",
+    });
+
+    const [errors, setErrors] = useState({});
+    const router = useRouter();
+    const [editData, setEditData] = useState();
+    const [formValue, setFormValue] = useState({});
+    const [authenticated, setAuthenticated] = useState(false);
+>>>>>>> origin/main
 
     const changeVehicleFieldHandler = (e) => {
         setVehicleField({
@@ -138,6 +194,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
 
     const validateForm = () => {
         let isValid = true;
+<<<<<<< HEAD
         let newErrors = {};
 
         for (const [key, validation] of Object.entries(formValidations)) {
@@ -152,14 +209,111 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                 isValid = false;
             } else if (validation.pattern && !validation.pattern.value.test(vehicleField[key])) {
                 newErrors[key] = validation.pattern.message;
+=======
+        let errors = {};
+
+        for (const [key, value] of Object.entries(formValidations)) {
+            if (value.required && !vehicleField[key]) {
+                errors[key] = `${key.replace(/_/g, ' ')} is required`;
+>>>>>>> origin/main
                 isValid = false;
             }
         }
 
+<<<<<<< HEAD
         setErrors(newErrors);
         return isValid;
     };
 
+=======
+        setErrors(errors);
+        return isValid;
+    };
+
+    const onSubmitChange = async (e) => {
+        e.preventDefault();
+        if (id) {
+
+            try {
+                const token = getCookie("token");
+                const response = await axios.put(`${url}/transport/vehicle/${id}`, vehicleField, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.status === 200) {
+                    updateVehiclesList();
+                    close(false);
+                    router.push("/dashboard/vehicles"); // Move the redirect after updating vehicles list
+                } else {
+                    console.error("Failed to save:", response.data);
+                }
+            } catch (error) {
+                console.error("API error:", error.response.data);
+                console.log("Something Wrong");
+
+            }
+
+        } else {
+
+            try {
+                const token = getCookie("token");
+                const response = await axios.post(`${url}/transport/vehicle`, vehicleField, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.status === 200) {
+                    updateVehiclesList();
+                    close(false);
+                    router.push("/dashboard/vehicles"); // Move the redirect after updating vehicles list
+                } else {
+                    console.error("Failed to save:", response.data);
+                }
+            } catch (error) {
+                console.error("API error:", error.response.data);
+                console.log("Something Wrong");
+
+            }
+
+        }
+
+    };
+
+    const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+    useEffect(() => {
+        const token = getCookie("token");
+
+        if (token) {
+            axios.get(`${url}/user`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then((response) => {
+                    setAuthenticated(true);
+                    if (response.data.user_type === "TR") {
+                        // handle TR user
+                    } else if (response.data.user_type === "EC") {
+                        router.replace("/company/dashboard");
+                    } else {
+                        console.error("Invalid user type");
+                        router.replace("/");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching user data:", error);
+                    router.replace("/");
+                });
+        } else {
+            router.replace("/");
+        }
+    }, [router, url]);
+
+>>>>>>> origin/main
     useEffect(() => {
         async function fetchData() {
             const token = getCookie("token");
@@ -186,6 +340,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         fetchData();
     }, [url]);
 
+<<<<<<< HEAD
     const onSubmitChange = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
@@ -264,20 +419,33 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
 
     useEffect(() => {
         async function fetchData() {
+=======
+    useEffect(() => {
+        async function fetchEditData() {
+>>>>>>> origin/main
             const token = getCookie("token");
 
             if (!token) {
                 console.error("No token available");
+<<<<<<< HEAD
                 return;
             }
 
             try {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/transport/vehicle/create`, {
+=======
+                return; // You may want to handle this scenario accordingly
+            }
+
+            try {
+                const response = await axios.get(`${url}/transport/vehicle/${id}/edit`, {
+>>>>>>> origin/main
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
+<<<<<<< HEAD
                 setFuelTypes(response.data.fuelTypes || []);
                 setLicenseStates(response.data.licenseStates || []);
             } catch (error) {
@@ -335,6 +503,63 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
             debouncedFetchEditData();
         }
     }, [id, debouncedFetchEditData]);
+=======
+                console.log(vehicleField, response.data);
+
+
+                setEditData(response.data);
+                setVehicleField({
+                    ...vehicleField,
+                    ...response.data.vehicle
+                });
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                // Handle error appropriately
+            }
+        }
+
+        if (id) {
+            fetchEditData();
+        }
+    }, [url, id]);
+
+    useEffect(() => {
+        async function fetchEditData() {
+            const token = getCookie("token");
+
+            if (!token) {
+                console.error("No token available");
+                return; // You may want to handle this scenario accordingly
+            }
+
+            try {
+                const response = await axios.get(`${url}/transport/vehicle/${id}/edit`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                console.log(vehicleField, response.data);
+
+
+                setEditData(response.data);
+                setVehicleField({
+                    ...vehicleField,
+                    ...response.data.vehicle
+                });
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                // Handle error appropriately
+            }
+        }
+
+        // if (id) {
+        //     fetchEditData();
+        // }
+    }, [url, id])
+>>>>>>> origin/main
 
     return (
         <div className={`modal ${open ? 'showpopup' : ''}`} style={{ display: 'block' }} aria-modal="true" role="dialog">
@@ -351,6 +576,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                         </div>
                     </div>
                     <div className="modal-body mx-5 mx-xl-15 my-7">
+<<<<<<< HEAD
                         <form id="kt_modal_add_vehicle_form" className="form fv-plugins-bootstrap5 fv-plugins-framework" onSubmit={onSubmitChange}>
                             <div className="row">
                                 <div className="col-md-12">
@@ -404,6 +630,24 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                             aria-label={`Select Make`}
                                             onChange={changeVehicleFieldHandler}
                                             value={vehicleField.make}
+=======
+                        <form id="kt_modal_add_vehicle_form" className="form fv-plugins-bootstrap5 fv-plugins-framework">
+                            {Object.keys(formValidations).map((field, index) => (
+                                <div className="fv-row mb-7" key={index}>
+                                    <label className="fs-6 fw-semibold form-label mb-2">
+                                        <span className={formValidations[field].required ? "required" : ""}>
+                                            {field.replace(/_/g, ' ').toUpperCase()}
+                                        </span>
+                                    </label>
+
+                                    {field === "make" ? (
+                                        <select
+                                            className="form-select form-select-solid"
+                                            name={field}
+                                            aria-label={`Select ${field}`}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+>>>>>>> origin/main
                                         >
                                             <option value="">Select an option</option>
                                             {formValue?.make?.map(data => (
@@ -412,6 +656,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                                 </option>
                                             ))}
                                         </select>
+<<<<<<< HEAD
                                         {errors.make && <div style={{ color: 'red' }}>{errors.make}</div>}
                                     </div>
                                 </div>
@@ -471,6 +716,15 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                             aria-label={`Select Fuel Type`}
                                             onChange={changeVehicleFieldHandler}
                                             value={vehicleField.fuel_type}
+=======
+                                    ) : field === "fuel_type" ? (
+                                        <select
+                                            className="form-select form-select-solid"
+                                            name={field}
+                                            aria-label={`Select ${field}`}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+>>>>>>> origin/main
                                         >
                                             <option value="">Select an option</option>
                                             {formValue?.option?.map(data => (
@@ -479,6 +733,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                                 </option>
                                             ))}
                                         </select>
+<<<<<<< HEAD
                                         {errors.fuel_type && <div style={{ color: 'red' }}>{errors.fuel_type}</div>}
                                     </div>
                                 </div>
@@ -554,11 +809,39 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                         >
                                             <option value="">Select an option</option>
                                             {formValue && formValue.state && formValue?.state?.map((data) => (
+=======
+                                    ) : field === "year" ? (
+                                        <select
+                                            className="form-select form-select-solid"
+                                            name={field}
+                                            aria-label={`Select ${field}`}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+                                        >
+                                            <option value="">Select an option</option>
+                                            {Array.from({ length: (2024 - 1990 + 1) }, (_, i) => 1990 + i).map(year => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : field === "license_state" ? (
+                                        <select
+                                            className="form-select form-select-solid"
+                                            name={field}
+                                            aria-label={`Select ${field}`}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+                                        >
+                                            <option value="">Select an option</option>
+                                            {formValue?.state?.map((data) => (
+>>>>>>> origin/main
                                                 <option key={data.state_id} value={data.state_id}>
                                                     {data.state_name}
                                                 </option>
                                             ))}
                                         </select>
+<<<<<<< HEAD
                                         {errors.license_state && <div style={{ color: 'red' }}>{errors.license_state}</div>}
                                     </div>
                                 </div>
@@ -600,14 +883,61 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                 <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
                                     <span className='indicator-progress d-flex justify-content-center'>
                                         {isLoading ? <LoadingIcons.TailSpin height={18} /> : id ? "Update" : "Save"}
+=======
+                                    ) : field === "fuel_type_primary" || field === "fuel_type_secondary" ? (
+                                        <input
+                                            className="form-control form-control-solid"
+                                            placeholder={`Enter ${field.replace(/_/g, ' ')}`}
+                                            name={field}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+                                        />
+                                    ) : field === "throttle_wifi" ? (
+                                        <select className="form-select form-select-solid" name={field} value={vehicleField[field]} aria-label={`Select ${field}`} onChange={changeVehicleFieldHandler}>
+                                            <option value="">Select an option</option>
+                                            {Object.entries(formValue?.throttle_wifi || {}).map(([key, value]) => (
+                                                <option key={key} value={key}>
+                                                    {value}
+                                                </option>
+                                            ))}
+
+                                            )}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            className="form-control form-control-solid"
+                                            placeholder={`Enter ${field.replace(/_/g, ' ')}`}
+                                            name={field}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField[field]}
+                                        />
+                                    )}
+
+                                    {errors[field] && <div style={{ color: "red", marginTop: "5px" }}>{errors[field]}</div>}
+                                </div>
+                            ))}
+                            <div className="form-btn-grp w-100 text-center pt-15">
+                                <button type="reset" className="btn-light me-3" data-bs-dismiss="modal" aria-label="Close">
+                                    Discard
+                                </button>
+                                <button type="submit" id="kt_modal_add_vehicle_submit" className="btn btn-primary" onClick={onSubmitChange}>
+                                    <span className="indicator-label">Save</span>
+                                    <span className="indicator-progress">
+                                        Please wait... <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+>>>>>>> origin/main
                                     </span>
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+<<<<<<< HEAD
             </div >
         </div >
+=======
+            </div>
+        </div>
+>>>>>>> origin/main
     );
 };
 

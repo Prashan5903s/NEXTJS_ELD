@@ -161,6 +161,7 @@ i{
   overflow: hidden;
 }
 
+<<<<<<< HEAD
 
 .dt-layout-table {
   overflow: auto;
@@ -184,6 +185,12 @@ div.dt-container div.dt-layout-full {
   justify-content: end !important;
   align-items: center !important;
 }
+=======
+.table-responsive {
+  overflow: auto;
+}
+
+>>>>>>> origin/main
 
 .table .thead,
 .table .tbody {
@@ -363,7 +370,14 @@ li.dt-paging-button.page-item.active{
  display: flex;
  justify-content: start;
 }
+<<<<<<< HEAD
  
+=======
+ /* table td{ */
+  /* white-space: nowrap!important; */
+/* } */
+
+>>>>>>> origin/main
   table.dataTable > thead > tr {
     color: #78839d!important;
     font-weight: normal!important;

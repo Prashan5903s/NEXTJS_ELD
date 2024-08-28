@@ -35,9 +35,15 @@ export default function AuthLayout({
 
         <div
           className='d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2'
+<<<<<<< HEAD
           style={{ backgroundImage: "url(/media/misc/Truck.jpg)" }}
         >
           <div className='d-flex flex-column justify-content-lg-between flex-center py-15 px-5 px-md-15 w-100'>
+=======
+          style={{ backgroundImage: "url(/media/misc/auth-bg.png)" }}
+        >
+          <div className='d-flex flex-column flex-center py-15 px-5 px-md-15 w-100'>
+>>>>>>> origin/main
             <Link href='' className='mb-12 '>
               <img
                 alt='Logo'
@@ -46,7 +52,17 @@ export default function AuthLayout({
               />
             </Link>
 
+<<<<<<< HEAD
             <h1 className='d-none d-lg-block text-white fs-2qx fw-bolder text-center mb-7'>
+=======
+            <Image
+              className='mx-auto w-275px w-md-50 w-xl-500px mb-10 mb-lg-20'
+              src={authScreen}
+              alt=''
+            />
+
+            <h1 className='text-white fs-2qx fw-bolder text-center mb-7'>
+>>>>>>> origin/main
               Fast, Efficient and Productive
             </h1>
           </div>

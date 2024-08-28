@@ -411,6 +411,11 @@
 
 // export default Chart;
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> origin/main
 'use client';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -541,6 +546,7 @@ function Chart({ processedData, params = null }) {
     }))
     : [];
 
+<<<<<<< HEAD
   const sda = [
     { start: '02:00', end: '07:00' },
     { start: '09:00', end: '09:50' },
@@ -549,6 +555,13 @@ function Chart({ processedData, params = null }) {
 
   console.log(overtimeRanges, sda);
 
+=======
+    // const sda = [
+    //   { start: '02:00', end: '07:00' },
+    //   { start: '09:00', end: '09:50' },
+    //   { start: '11:00', end: '14:10' }
+    // ];
+>>>>>>> origin/main
 
   const xAnnotations = overtimeRanges.map(range => ({
     x: range.start,

@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const pathname = request.nextUrl.pathname;
   const splittedPathname = pathname.split("/");
+<<<<<<< HEAD
 
   // Check if there are enough segments to extract id
   const id = splittedPathname.length >= 5 ? splittedPathname[4] : undefined;
@@ -20,6 +21,12 @@ export async function middleware(request: NextRequest) {
 
   const dlist = ["/dashboard/drivers"];
   const llist = ['/dashboard/locations'];
+=======
+  const id = splittedPathname[4];
+  const ids = splittedPathname[3];
+
+  const dlist = ["/dashboard/drivers"];
+>>>>>>> origin/main
   const hlist = [`/dashboard/drivers/detail/${id}/hoursOfService`];
   const ddriver = [`/dashboard/drivers/detail/${id}`];
   const dadd = ["/dashboard/drivers/driver-add"];
@@ -30,12 +37,16 @@ export async function middleware(request: NextRequest) {
   const userList = ["/settings/organization/user-roles"];
   const vAssignList = ['/settings/organization/vehicle-assign'];
   const dActivityList = ["/settings/organization/driver-activity"];
+<<<<<<< HEAD
   const vAList = ['/settings/organization/vehicle-assign'];
   const vAAList = ['/settings/organization/vehicle-assign/add-assign'];
   const vAEList = [`/settings/organization/vehicle-assign/${id}`];
   const dAList = ['/settings/device'];
   const aDList = ['/settings/device/device-add'];
   const dEList = [`/settings/device/${ids}`];
+=======
+  const dAList = ['/settings/device'];
+>>>>>>> origin/main
 
   const TrPage = [
     "/dashboard",
@@ -52,6 +63,7 @@ export async function middleware(request: NextRequest) {
     `/settings/organization/driver-activity/${id}`,
     '/settings/device',
     `/settings/device/${ids}`,
+<<<<<<< HEAD
     '/settings/device/device-add',
     '/settings/organization/vehicle-assign',
     `/settings/organization/vehicle-assign/${id}`,
@@ -60,6 +72,10 @@ export async function middleware(request: NextRequest) {
     '/dashboard/locations',
     '/settings/organization/driver-activity',
     '/dashboard/documents'
+=======
+    '/settings/organization/vehicle-assign',
+    '/dashboard/vehicles'
+>>>>>>> origin/main
   ];
 
   const EcPage = ["/company/page", "/company/add", `/company/edit/${id}`];
@@ -81,12 +97,15 @@ export async function middleware(request: NextRequest) {
   const isvAssignList = vAssignList.includes(pathname);
   const isDActivity = dActivityList.includes(pathname);
   const isDAList = dAList.includes(pathname);
+<<<<<<< HEAD
   const isLList = llist.includes(pathname);
   const isVAList = vAList.includes(pathname);
   const isVAAList = vAAList.includes(pathname);
   const isVAEList = vAEList.includes(pathname);
   const isDEList = dEList.includes(pathname);
   const isADList = aDList.includes(pathname);
+=======
+>>>>>>> origin/main
 
   if (!token && (isECRequestPage || isTRRequestPage)) {
     return NextResponse.redirect(new URL("/", request.url));
@@ -129,7 +148,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+<<<<<<< HEAD
   if (isDList || isDAdd || isDEdit || isDDetail || isHList || isUserList || isVList || isvAssignList || isDActivity || isDAList || isLList || isVAList || isVAAList || isVAEList || isDEList) {
+=======
+  if (isDList || isDAdd || isDEdit || isDDetail || isHList || isUserList || isVList || isvAssignList || isDActivity || isDAList) {
+>>>>>>> origin/main
     try {
       const response = await fetch(`${BACKEND_API_URL}/transport/permission`, {
         method: "GET",
@@ -160,6 +183,10 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
       if (isUserList && !result.includes(26)) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
@@ -172,6 +199,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
 
+<<<<<<< HEAD
       if (isDAList && !result.includes(35)) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
@@ -192,10 +220,13 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
 
+=======
+>>>>>>> origin/main
       if (isDActivity && !result.includes(32)) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
 
+<<<<<<< HEAD
       if (isADList && !result.includes(33)) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
@@ -205,6 +236,12 @@ export async function middleware(request: NextRequest) {
       }
 
 
+=======
+      if(isDAList && !result.includes(35)){
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+
+>>>>>>> origin/main
       // Check edit detail permissions
       if (isDEdit || isDDetail || isHList) {
         const editDetailResponse = await fetch(
@@ -224,6 +261,10 @@ export async function middleware(request: NextRequest) {
         }
 
         const editDetailResult = await editDetailResponse.json();
+<<<<<<< HEAD
+=======
+        console.log("Edit Detail Result", editDetailResult);
+>>>>>>> origin/main
 
         if (!editDetailResult) {
           return NextResponse.redirect(new URL("/dashboard", request.url));
