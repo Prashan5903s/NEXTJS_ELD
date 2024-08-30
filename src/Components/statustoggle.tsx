@@ -2,11 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-<<<<<<< HEAD
 const ToggleSwitch = ({ status, vehicleId, updateVehiclesList }) => {
-=======
-const ToggleSwitch = ({status, vehicleId, updateVehiclesList}) => {
->>>>>>> origin/main
 
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -43,11 +39,7 @@ const ToggleSwitch = ({status, vehicleId, updateVehiclesList}) => {
         // Get package name
         const vehicleName = parent.querySelectorAll('td')[0].innerText;
 
-<<<<<<< HEAD
         if (toggle.checked) {
-=======
-        if(toggle.checked){
->>>>>>> origin/main
             Swal.fire({
                 text: "Are you sure you want to Activate " + vehicleName + "?",
                 icon: "warning",
@@ -130,15 +122,9 @@ const ToggleSwitch = ({status, vehicleId, updateVehiclesList}) => {
                     });
                 }
             });
-<<<<<<< HEAD
         } else {
             Swal.fire({
                 text: "Are you sure you want to Deactivate " + vehicleName + "?",
-=======
-        }else{
-            Swal.fire({
-                text: "Are you sure you want to Deactivate "+vehicleName+"?",
->>>>>>> origin/main
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
