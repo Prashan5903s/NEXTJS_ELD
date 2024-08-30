@@ -411,11 +411,6 @@
 
 // export default Chart;
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> origin/main
 'use client';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -428,9 +423,12 @@ const GraphChart = dynamic(() => import('react-apexcharts'), {
   loading: () => <p>Loading chart...</p>
 });
 
-function Chart({ processedData, params = null }) {
+function Chart({ processedData, params = null ,data}) {
 
+  console.log('JSON INPUT--- Data', JSON.stringify(data, null, 2));
   const [datas, setDatas] = useState();
+
+  console.log('xxxx Data', JSON.stringify(data, null, 2));
 
   const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
     const hours = String(Math.floor(i * 15 / 60)).padStart(2, '0');
@@ -438,6 +436,7 @@ function Chart({ processedData, params = null }) {
     return `${hours}:${minutes}`;
   });
 
+  
   useEffect(() => {
     if (params && params.params[2]) {
       setDatas(params.params[2]);
@@ -464,6 +463,7 @@ function Chart({ processedData, params = null }) {
   });
 
   const xData = ["0.00", ...xAxis];
+  // console.log('xaxis Data', JSON.stringify(xData, null, 2));
 
   let fetchingEndStatus = 0;
 
@@ -476,6 +476,7 @@ function Chart({ processedData, params = null }) {
 
   const yAxis = processedData.map(point => point.status);
   const yData = [...yAxis, fetchingEndStatus];
+  console.log('xaxis Data', JSON.stringify(xData + '  Ydata  ' + yData, null, 2));
 
   const mappedData = new Array(xLabels.length).fill(null);
   xData.forEach((time, index) => {
@@ -546,22 +547,15 @@ function Chart({ processedData, params = null }) {
     }))
     : [];
 
-<<<<<<< HEAD
-  const sda = [
-    { start: '02:00', end: '07:00' },
-    { start: '09:00', end: '09:50' },
-    { start: '11:00', end: '14:10' }
-  ];
+  // const sda = [
+  //   { start: '02:00', end: '07:00' },
+  //   { start: '09:00', end: '09:50' },
+  //   { start: '11:00', end: '14:10' }
+  // ];
 
-  console.log(overtimeRanges, sda);
 
-=======
-    // const sda = [
-    //   { start: '02:00', end: '07:00' },
-    //   { start: '09:00', end: '09:50' },
-    //   { start: '11:00', end: '14:10' }
-    // ];
->>>>>>> origin/main
+  console.log('overtimeRanges Data', JSON.stringify(overtimeRanges, null, 2));
+
 
   const xAnnotations = overtimeRanges.map(range => ({
     x: range.start,
@@ -656,18 +650,18 @@ function Chart({ processedData, params = null }) {
       },
     },
     grid: {
-      show: false,
+      show: true,
       borderColor: '#90A4AE',
       strokeDashArray: 0,
       position: 'back',
       xaxis: {
         lines: {
-          show: false,
+          show: true,
         },
       },
       yaxis: {
         lines: {
-          show: false,
+          show: true,
         },
       },
     },
