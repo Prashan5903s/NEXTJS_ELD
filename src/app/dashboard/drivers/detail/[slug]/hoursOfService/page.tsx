@@ -1208,13 +1208,15 @@ export default function HoursOfService({ params }) {
     debounce(async (date) => {
       setLoading(true); // Set loading state to true before fetching logs
       try {
-        const response = await fetch(`${BackEND}/graph/chart/data/${driverId}/${date}`, {
+        const response = await fetch(`${BackEND}/graph/chart/data/${driverId}/2024-08-14`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log('Result Data', JSON.stringify(response, null, 2));
+
 
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -1237,6 +1239,8 @@ export default function HoursOfService({ params }) {
     setLoading(true); // Set loading state to true before fetching
     try {
       const result = await graphHosData(dateKey);
+      console.log('Result Data--->', JSON.stringify(result, null, 2));
+
       if (result) {
         setGraphDataMap(prev => ({ ...prev, [dateKey]: result }));
       }
