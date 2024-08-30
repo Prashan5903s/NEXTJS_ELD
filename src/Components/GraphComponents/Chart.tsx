@@ -411,16 +411,12 @@
 
 // export default Chart;
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> origin/main
 'use client';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { parseISO, format } from 'date-fns';
 import styles from '../../styles/chart.module.css';
+import { data } from 'jquery';
 
 // Dynamically import the GraphChart component from react-apexcharts with SSR disabled
 const GraphChart = dynamic(() => import('react-apexcharts'), {
@@ -443,6 +439,9 @@ function Chart({ processedData, params = null }) {
       setDatas(params.params[2]);
     }
   }, [params]);
+
+  console.log('Data', datas);
+
 
   const xAxis = [];
   let cumulativeHours = 0;
@@ -546,22 +545,14 @@ function Chart({ processedData, params = null }) {
     }))
     : [];
 
-<<<<<<< HEAD
   const sda = [
     { start: '02:00', end: '07:00' },
     { start: '09:00', end: '09:50' },
     { start: '11:00', end: '14:10' }
   ];
 
-  console.log(overtimeRanges, sda);
+  console.log('overtime', overtimeRanges, sda);
 
-=======
-    // const sda = [
-    //   { start: '02:00', end: '07:00' },
-    //   { start: '09:00', end: '09:50' },
-    //   { start: '11:00', end: '14:10' }
-    // ];
->>>>>>> origin/main
 
   const xAnnotations = overtimeRanges.map(range => ({
     x: range.start,

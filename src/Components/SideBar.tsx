@@ -178,7 +178,6 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                 setParentId("");
             } else {
                 setParentId(menuId);
-                console.log(menuItems[idx].path);
                 if (menuItems[idx].path != "") {
                     router.push(menuItems[idx].path);
                 }
@@ -198,7 +197,6 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                             (x) => x.id == menuId
                         );
                         if (subIdx > -1 && menuItems[idx]?.subitems[subIdx].path != "") {
-                            console.log(menuItems[idx]?.subitems[subIdx].path);
                             router.push(menuItems[idx]?.subitems[subIdx].path);
                         }
                     }
@@ -221,7 +219,6 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
                         subIdx > -1 &&
                         menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path != ""
                     ) {
-                        console.log(menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path);
                         router.push(menuItems[idx]?.subitems[cIdx]?.subitems[subIdx].path);
                     }
                 }

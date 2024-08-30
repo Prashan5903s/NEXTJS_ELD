@@ -5,19 +5,23 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { debounce } from 'lodash';
 import { getPermissions } from "@/Components/permission/page";
-import 'datatables.net-dt/css/dataTables.dataTables.min.css';
-import 'datatables.net';
-import $ from 'jquery';
-import dynamic from 'next/dynamic';
-import Skeleton from 'react-loading-skeleton'; // Import Skeleton
-import 'react-loading-skeleton/dist/skeleton.css'; // Import skeleton styles
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import {
+    useReactTable,
+    flexRender,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getFilteredRowModel
+} from '@tanstack/react-table';
 
 const VehicleTable = () => {
     const [showModal, setShowModal] = useState(false);
     const [vehicles, setVehicles] = useState([]);
     const [modalMode, setModalMode] = useState('add');
     const [selectedVehicleId, setSelectedVehicleId] = useState(null);
-    const [loading, setLoading] = useState(true); // Add loading state
+    const [loading, setLoading] = useState(true);
+    const [globalFilter, setGlobalFilter] = useState('');
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const router = useRouter();
     const [authenticated, setAuthenticated] = useState(false);
@@ -30,11 +34,11 @@ const VehicleTable = () => {
         } catch (error) {
             console.error('Error fetching permissions:', error);
         }
-    }, 1000); // Adjust the debounce delay as needed
+    }, 300);
 
     useEffect(() => {
         fetchPermissions(setPermissn);
-    }, []); // Empty dependency array ensures this runs only once
+    }, []);
 
     const formattedDate = (dateString) => {
         const date = new Date(dateString);
@@ -65,9 +69,8 @@ const VehicleTable = () => {
         return null;
     };
 
-    // Function to fetch vehicles
     const fetchVehicles = async () => {
-        setLoading(true); // Set loading to true before fetching
+        setLoading(true);
         try {
             const token = getCookie("token");
             if (!token) return;
@@ -79,73 +82,80 @@ const VehicleTable = () => {
         } catch (error) {
             console.error('Error fetching vehicles:', error);
         } finally {
-            setLoading(false); // Set loading to false after fetching
+            setLoading(false);
         }
     };
 
-    // Debounced fetchVehicles function
-    const debouncedFetchVehicles = useCallback(debounce(fetchVehicles, 1000), [url]);
-
-    // Fetch user data and vehicles
-    useEffect(() => {
-        const token = getCookie("token");
-        if (token) {
-            axios.get(`${url}/user`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((response) => {
-                    setAuthenticated(true);
-                    if (response.data.user_type === "TR") {
-                        // Do something specific for TR users
-                    } else if (response.data.user_type === "EC") {
-                        router.replace("/company/dashboard");
-                    } else {
-                        console.error("Invalid user type");
-                        router.replace("/");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching user data:", error);
-                    router.replace("/");
-                });
-        } else {
-            router.replace("/");
-        }
-
-        debouncedFetchVehicles(); // Call the debounced function
-
-    }, [router, debouncedFetchVehicles]);
+    const debouncedFetchVehicles = useCallback(debounce(fetchVehicles, 300), [url]);
 
     useEffect(() => {
-        const initializeDataTable = () => {
-            if ($.fn.DataTable.isDataTable('#vehicleTable')) {
-                $('#vehicleTable').DataTable().destroy(); // Destroy previous instance
-            }
-
-            $('#vehicleTable').DataTable({
-                paging: true,
-                searching: true,
-                destroy: true,
-                initComplete: function () {
-                    $('#vehicleTable_filter').detach().appendTo('.searchBar');
-                }
-            });
-        };
-
-        if (vehicles.length > 0) {
-            initializeDataTable();
-        }
-
-        return () => {
-            if ($.fn.DataTable.isDataTable('#vehicleTable')) {
-                $('#vehicleTable').DataTable().destroy();
-            }
-        };
-    }, [vehicles]);
+        debouncedFetchVehicles();
+    }, [debouncedFetchVehicles]);
 
     const updateVehiclesList = () => {
-        debouncedFetchVehicles(); // Refresh the vehicle list
+        debouncedFetchVehicles();
     };
+
+    // Define columns
+    const columns = React.useMemo(
+        () => [
+            { header: 'Name', accessorKey: 'name' },
+            { header: 'VIN', accessorKey: 'vin' },
+            { header: 'Make', accessorKey: 'make' },
+            { header: 'Model', accessorKey: 'model' },
+            { header: 'Year', accessorKey: 'year' },
+            { header: 'Harsh Acceleration Setting Type', accessorKey: 'harsh_acceleration_setting_type' },
+            { header: 'Notes', accessorKey: 'notes' },
+            { header: 'License Plate', accessorKey: 'license_plate' },
+            {
+                header: 'Status',
+                accessorKey: 'status',
+                cell: (info) => (
+                    <div className={`badge badge-light-${info.getValue() ? 'success' : 'danger'}`}>
+                        {info.getValue() ? 'Active' : 'De-active'}
+                    </div>
+                )
+            },
+            {
+                header: 'Created',
+                accessorKey: 'created_at',
+                cell: (info) => formattedDate(info.getValue())
+            },
+            {
+                header: 'Actions',
+                cell: (info) => (
+                    <div className="text-end">
+                        {permissn.includes(2) && (
+                            <button className="btn btn-icon btn-active-light-primary w-30px h-30px me-3" onClick={() => openModal('edit', info.row.original.id)}>
+                                <i className="ki ki-outline ki-pencil fs-3"></i>
+                            </button>
+                        )}
+                        <label className="form-switch form-check-solid">
+                            <input className="form-check-input border" type="checkbox" checked={info.row.original.status} onChange={() => {/* handle change */ }} />
+                        </label>
+                    </div>
+                )
+            }
+        ],
+        [formattedDate, permissn]
+    );
+
+    // Create table instance
+    const table = useReactTable({
+        data: vehicles,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        state: {
+            globalFilter,
+        },
+        onGlobalFilterChange: setGlobalFilter,
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue(columnId);
+            return String(value).toLowerCase().includes(filterValue.toLowerCase());
+        },
+    });
 
     return (
         <div className="listItems">
@@ -159,7 +169,13 @@ const VehicleTable = () => {
                 <div className="row mt-3 card card-flush card-body pt-0">
                     <div className="searchBar">
                         <div className="search" id="search-container">
-                            {/* Search input will be moved by DataTable's initComplete */}
+                            <input
+                                type="text"
+                                value={globalFilter || ''}
+                                onChange={(e) => setGlobalFilter(e.target.value)}
+                                placeholder="Search..."
+                                className="form-control"
+                            />
                         </div>
                         {permissn.includes(1) && (
                             <div className="btnGroup">
@@ -175,24 +191,15 @@ const VehicleTable = () => {
                             {loading ? (
                                 <table className="table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_tr_u_table">
                                     <thead>
-                                        <tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                                            <th className="min-w-125px" style={{ width: 308.733 }}>NAME</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>VIN</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>MAKE</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>MODEL</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>YEAR</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>HIGH ACCELERATION SETTING TYPE</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>NOTES</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>LICENSE PLATE</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>STATUS</th>
-                                            <th className="min-w-125px" style={{ width: 125 }}>Joined Date</th>
-                                            {permissn.includes(2) && (
-                                                <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
-                                            )}
-                                        </tr>
+                                        {table.getHeaderGroups().map(headerGroup => (
+                                            <tr key={headerGroup.id}>
+                                                {headerGroup.headers.map(header => (
+                                                    <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
+                                                ))}
+                                            </tr>
+                                        ))}
                                     </thead>
                                     <tbody className="text-gray-600 fw-semibold">
-                                        {/* Skeleton loaders for rows */}
                                         {[...Array(5)].map((_, index) => (
                                             <tr key={index}>
                                                 <td className="d-flex align-items-center">
@@ -211,68 +218,70 @@ const VehicleTable = () => {
                                                 <td><Skeleton width={150} /></td>
                                                 <td><Skeleton width={150} /></td>
                                                 <td><Skeleton width={150} /></td>
-                                                {permissn.includes(2) && (
-                                                    <td className="text-end"><Skeleton width={100} /></td>
-                                                )}
+                                                {
+                                                    permissn.includes(2) && (
+                                                        <td className="text-end"><Skeleton width={100} /></td>
+                                                    )
+                                                }
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             ) : (
-                                <table id="vehicleTable" className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
+                                <table className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
                                     <thead>
-                                        <tr className="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                            <th className="min-w-125px">Name</th>
-                                            <th className="min-w-125px">VIN</th>
-                                            <th className="min-w-125px">Make</th>
-                                            <th className="min-w-125px">Model</th>
-                                            <th className="min-w-125px">Year</th>
-                                            <th className="min-w-125px">Harsh Acceleration Setting Type</th>
-                                            <th className="min-w-125px">Notes</th>
-                                            <th className="min-w-125px">License Plate</th>
-                                            <th className="min-w-125px">Status</th>
-                                            <th className="min-w-125px">Created</th>
-                                            <th className="text-end min-w-100px">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="fw-semibold text-gray-600">
-                                        {vehicles.length > 0 ? (
-                                            vehicles.map(vehicle => (
-                                                <tr key={vehicle.id}>
-                                                    <td>{vehicle.name}</td>
-                                                    <td>{vehicle.vin}</td>
-                                                    <td>{vehicle.make}</td>
-                                                    <td>{vehicle.model}</td>
-                                                    <td>{vehicle.year}</td>
-                                                    <td>{vehicle.harsh_acceleration_setting_type}</td>
-                                                    <td>{vehicle.notes}</td>
-                                                    <td>{vehicle.license_plate}</td>
-                                                    <td>
-                                                        <div className={`badge badge-light-${vehicle.status ? 'success' : 'danger'}`}>
-                                                            {vehicle.status ? 'Active' : 'De-active'}
-                                                        </div>
-                                                    </td>
-                                                    <td>{formattedDate(vehicle.created_at)}</td>
-                                                    <td className="text-end">
-                                                        {permissn.includes(2) && (
-                                                            <button className="btn btn-icon btn-active-light-primary w-30px h-30px me-3" onClick={() => openModal('edit', vehicle.id)}>
-                                                                <i className="ki ki-outline ki-pencil fs-3"></i>
-                                                            </button>
-                                                        )}
-                                                        <label className="form-switch form-check-solid">
-                                                            <input className="form-check-input border" type="checkbox" value="" checked={vehicle.status} onChange={() => {/* handle change */ }} />
-                                                        </label>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="11" className="text-center">No data available</td>
+                                        {table.getHeaderGroups().map(headerGroup => (
+                                            <tr key={headerGroup.id}>
+                                                {headerGroup.headers.map(header => (
+                                                    <th key={header.id}>{flexRender(header.column.columnDef.header, header.getContext())}</th>
+                                                ))}
                                             </tr>
-                                        )}
+                                        ))}
+                                    </thead>
+                                    <tbody>
+                                        {table.getRowModel().rows.map(row => (
+                                            <tr key={row.id}>
+                                                {row.getVisibleCells().map(cell => (
+                                                    <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                                                ))}
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             )}
+                            <div className="pagination">
+                                <div className="pagination-controls">
+                                    <button
+                                        onClick={() => table.previousPage()}
+                                        disabled={!table.getCanPreviousPage()}
+                                    >
+                                        Previous
+                                    </button>
+                                    <span>
+                                        <strong>
+                                            {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                        </strong>
+                                    </span>
+                                    <button
+                                        onClick={() => table.nextPage()}
+                                        disabled={!table.getCanNextPage()}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                                <div className="page-size">
+                                    <select
+                                        value={table.getState().pagination.pageSize}
+                                        onChange={e => table.setPageSize(Number(e.target.value))}
+                                    >
+                                        {[10, 20, 30, 40, 50].map(pageSize => (
+                                            <option key={pageSize} value={pageSize}>
+                                                Show {pageSize}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

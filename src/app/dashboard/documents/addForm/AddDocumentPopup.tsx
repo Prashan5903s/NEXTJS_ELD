@@ -3,6 +3,8 @@ import { useRouter } from "next/navigation";
 import { debounce } from 'lodash';
 import axios from "axios";
 import LoadingIcons from 'react-loading-icons';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 
 const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
     const [documentField, setDocumentField] = useState({
@@ -17,6 +19,7 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
     const router = useRouter();
     const [editData, setEditData] = useState();
     const [isLoading, setIsLoading] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
     const [authenticated, setAuthenticated] = useState(false);
     const [docs, setDocs] = useState();
     const [imagePreview, setImagePreview] = useState("");
@@ -133,7 +136,7 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
                 console.error("Failed to save:", response.data);
             }
         } catch (error) {
-            console.error("API error:", error.response.data);
+            console.error("API error:", error);
             console.log("Something Wrong");
         } finally {
             setIsLoading(false);
@@ -191,8 +194,8 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
         }
     }, [router, url]);
 
-    useEffect(() => {
-        async function fetchData() {
+    const fetchData = useCallback(
+        debounce(async () => {
             const token = getCookie("token");
             if (!token) {
                 console.error("No token available");
@@ -209,10 +212,14 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
-        }
+        }, 1000), // Debounce delay in milliseconds
+        [url] // Dependencies for useCallback
+    );
 
+    // Use useEffect to call the debounced fetchData function
+    useEffect(() => {
         fetchData();
-    }, [url]);
+    }, [fetchData]); // Dependency on fetchData
 
     const fetchEditData = useCallback(debounce(async (id) => {
         const token = getCookie("token");
@@ -228,22 +235,87 @@ const AddDocumentModal = ({ id, close, open, updateDocumentList }) => {
                 },
             });
 
-            setEditData(response.data);
-            setDocumentField({
-                ...documentField,
-                ...response.data.doc,
-            });
+            if (response.data && response.data.doc) {
+                setEditData(response.data);
+                setDocumentField({
+                    driver_id: response.data.doc.driver_id || "",
+                    document_type: response.data.doc.document_type || "",
+                    file: "", // Reset file field, file uploads are handled differently
+                    notes: response.data.doc.notes || "",
+                    status: response.data.doc.status || "",
+                });
+                // If you need to set image preview, you can also do it here
+                // setImagePreview(response.data.doc.file_url || "");
+            }
         } catch (error) {
             console.error("Error fetching data:", error);
         }
-    }, 1000), [documentField, url]); // Adjust debounce delay (1000 ms) as needed
+    }, 1000), [url]);
 
-    // Use effect to call the fetch function
     useEffect(() => {
         if (id) {
             fetchEditData(id);
         }
-    }, [id, fetchEditData]); // Dependency array includes fetchEditData
+    }, [id, fetchEditData]);
+
+    useEffect(() => {
+        if (id) {
+            if (editData && documentField && docs) {
+                setIsDataLoading(true);
+            }
+        } else {
+            if (docs) {
+                setIsDataLoading(true);
+            }
+        }
+    }, [id, editData, documentField, docs])
+
+    if (!isDataLoading) {
+        return (
+            <div className={`modal ${open ? 'showpopup' : ''}`} style={{ display: 'block' }} aria-modal="true" role="dialog">
+                <div className="modal-dialog modal-dialog-centered w-100 mw-650px">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 className="fw-bold"><Skeleton width={300} /></h2>
+                            <div className="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                                <i onClick={() => close(false)} className="ki ki-outline ki-cross fs-1"></i>
+                            </div>
+                        </div>
+                        <div className="modal-body mx-5 mx-xl-15 my-7">
+                            <form id="kt_modal_add_vehicle_form" className="form fv-plugins-bootstrap5 fv-plugins-framework" noValidate="novalidate" encType="multipart/form-data" onSubmit={onSubmitChange}>
+                                <div className="d-flex flex-column scroll-y me-n7 pe-7" id="kt_modal_add_vehicle_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: true, lg: false}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_add_vehicle_header" data-kt-scroll-wrappers="#kt_modal_add_vehicle_scroll" data-kt-scroll-offset="300px">
+                                    <div className="mb-7">
+                                        <label className="form-label required">Driver</label>
+                                        <Skeleton width={460} />
+                                    </div>
+                                    <div className="mb-7">
+                                        <label className="form-label required">Document type</label>
+                                        <Skeleton width={460} />
+                                    </div>
+                                    <div className="mb-7">
+                                        <label className="form-label required">File</label>
+                                        <Skeleton width={460} />
+                                    </div>
+                                    <div className="mb-7">
+                                        <label className="form-label">Notes</label>
+                                        <Skeleton width={460} height={120} />
+                                    </div>
+                                    <div className="mb-7">
+                                        <label className="form-label required">Status</label>
+                                        <Skeleton width={460} />
+                                    </div>
+                                </div>
+                                <div className="form-btn-grp w-100 text-center pt-15">
+                                    <Skeleton width={100} />
+                                    <Skeleton width={100} />
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`modal ${open ? 'showpopup' : ''}`} style={{ display: 'block' }} aria-modal="true" role="dialog">

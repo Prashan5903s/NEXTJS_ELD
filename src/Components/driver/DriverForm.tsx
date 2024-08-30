@@ -1,16 +1,19 @@
 "use client";
-import React, { use, useEffect, useState, useRef } from "react";
+import React, { use, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import IntlTelInput from "react-intl-tel-input";
 import "react-intl-tel-input/dist/main.css";
 import axios from "axios";
+import { debounce } from 'lodash';
 import Select from "react-select";
 import { SubmitHandler, useForm, Controller, set } from "react-hook-form";
 import { Value } from "sass";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import LoadingIcons from 'react-loading-icons';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 // import '../styles/globals.css'; // Your global styles
 
 type IFormInput = {
@@ -57,6 +60,7 @@ function DriverForm({ id }) {
   const [driver, setDriver] = useState(null);
   const [adv, setAdv] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
   const [userName, setUserName] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [states, setStates] = useState([]);
@@ -97,11 +101,7 @@ function DriverForm({ id }) {
         },
       });
 
-      console.log(email, emailVal, response.data);
-
       return response.data === 0; // If no users found, email is unique
-
-
 
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -445,60 +445,6 @@ function DriverForm({ id }) {
   }, [stateId]);
 
   useEffect(() => {
-    function getCookie(name) {
-      const nameEQ = name + "=";
-      const ca = document.cookie.split(";");
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        ``;
-        while (c.charAt(0) === " ") c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0)
-          return c.substring(nameEQ.length, c.length);
-      }
-      return null;
-    }
-
-    const token = getCookie("token");
-
-    if (token) {
-      axios
-        .get(`${url}/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then(async (response) => {
-          setAuthenticated(true);
-          const userType = response.data.user_type;
-
-          if (userType === "TR") {
-            if (id) {
-              await Promise.all([
-                Edit(),
-                Address(),
-                HoursOfservice(),
-                Hometerminal(),
-              ]);
-            } else {
-              await Promise.all([Address(), HoursOfservice(), Hometerminal()]);
-            }
-          } else if (userType === "EC") {
-            router.replace("/company/dashboard");
-          } else {
-            console.error("Invalid user type");
-            router.replace("/");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user data:", error);
-          router.replace("/");
-        });
-    } else {
-      router.replace("/");
-    }
-  }, [id, router, reset]);
-
-  useEffect(() => {
     async function fetchUserName() {
       function getCookie(name) {
         const nameEQ = name + "=";
@@ -627,32 +573,50 @@ function DriverForm({ id }) {
     }
   };
 
-  const Address = async () => {
+  const fetchAddress = async () => {
     try {
       const response = await axios.get(`${url}/driver/create`, axiosConfig);
       setAddress(response.data);
     } catch (error) {
-      console.error("Error fetching driver data:", error);
+      console.error("Error fetching address data:", error);
     }
   };
 
-  const HoursOfservice = async () => {
+  const fetchHoursOfService = async () => {
     try {
       const response = await axios.get(`${url}/step2`, axiosConfig);
       setHoursOfService(response.data);
     } catch (error) {
-      console.error("Error fetching driver data:", error);
+      console.error("Error fetching hours of service data:", error);
     }
   };
 
-  const Hometerminal = async () => {
+  const fetchHomeTerminal = async () => {
     try {
       const response = await axios.get(`${url}/step3`, axiosConfig);
       setHomeTerminal(response.data);
     } catch (error) {
-      console.error("Error fetching driver data:", error);
+      console.error("Error fetching home terminal data:", error);
     }
   };
+
+  const debouncedFetchEdit = useCallback(debounce(Edit, 1000), []);
+  const debouncedFetchAddress = useCallback(debounce(fetchAddress, 1000), []);
+  const debouncedFetchHoursOfService = useCallback(debounce(fetchHoursOfService, 1000), []);
+  const debouncedFetchHomeTerminal = useCallback(debounce(fetchHomeTerminal, 1000), []);
+
+  useEffect(() => {
+    if (id) {
+      debouncedFetchEdit();
+      debouncedFetchAddress();
+      debouncedFetchHoursOfService();
+      debouncedFetchHomeTerminal();
+    } else {
+      debouncedFetchAddress();
+      debouncedFetchHoursOfService();
+      debouncedFetchHomeTerminal();
+    }
+  }, [id, debouncedFetchAddress, debouncedFetchHoursOfService, debouncedFetchHomeTerminal, debouncedFetchEdit]);
 
   toastr.options = {
     closeButton: true,
@@ -670,67 +634,6 @@ function DriverForm({ id }) {
     hideEasing: "linear",
     showMethod: "fadeIn",
     hideMethod: "fadeOut",
-  };
-
-  const addDriver = async (data) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${url}/driver`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      // Check if the response is ok
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error adding driver:", errorData);
-        setIsLoading(false);
-        return;
-      } else {
-        toastr["success"]("Driver added successfully!");
-        router.push("/dashboard/drivers");
-      }
-
-      // Redirect or show success message
-      // router.push('/dashboard/drivers');
-    } catch (error) {
-      setIsLoading(false);
-      console.error("Error adding driver:", error);
-    }
-  };
-
-  const editDriver = async (id, data, token) => {
-
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${url}/driver/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      // Check if the response is ok
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error updating driver:", errorData);
-        return;
-        setIsLoading(false);
-      } else {
-        const responseData = await response.json(); // Assuming response contains JSON data
-        toastr["success"]("Driver updated successfully!");
-        router.push("/dashboard/drivers");
-      }
-    } catch (error) {
-      setIsLoading(false);
-      console.error("Error updating driver:", error);
-    }
   };
 
   useEffect(() => {
@@ -789,16 +692,465 @@ function DriverForm({ id }) {
     }
   }, [driver, setValue, userName]);
 
-  const onSubmit = async (data) => {
+  const addDriver = async (data) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${url}/driver`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error adding driver:", errorData);
+      } else {
+        toastr["success"]("Driver added successfully!");
+        router.push("/dashboard/drivers");
+      }
+    } catch (error) {
+      console.error("Error adding driver:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const editDriver = async (id, data, token) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${url}/driver/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error updating driver:", errorData);
+      } else {
+        toastr["success"]("Driver updated successfully!");
+        router.push("/dashboard/drivers");
+      }
+    } catch (error) {
+      console.error("Error updating driver:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmitHandler = async (data) => {
     if (id) {
       await editDriver(id, data, token);
-      // await editDriver(data);
     } else {
       await addDriver(data);
     }
   };
 
+  // Use useCallback to memoize the debounced function
+  const debouncedOnSubmit = useCallback(debounce(onSubmitHandler, 300), [id, token]);
+
+  const onSubmit = async (data) => {
+    debouncedOnSubmit(data);
+  };
+
   const selectRef = useRef(null);
+
+  useEffect(() => {
+    if (id) {
+      if (driver && userName && homeTerminal && hoursOfService && address) {
+        setIsDataLoading(true);
+      }
+    } else {
+      if (userName && homeTerminal && hoursOfService && address) {
+        setIsDataLoading(true);
+      }
+    }
+  }, [id, driver, userName, homeTerminal, hoursOfService, address])
+
+  if (!isDataLoading) {
+    return (
+      <div className="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_toolbar" className="app-toolbar pt-6 pb-2 mb-5">
+          <div
+            id="kt_app_toolbar_container"
+            className="app-container container-fluid d-flex align-items-stretch"
+          >
+            <div className="app-toolbar-wrapper d-flex flex-stack flex-wrap gap-4 w-100">
+              <div className="page-title d-flex flex-column justify-content-center gap-1 me-3">
+                <h1 className="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
+                  <Skeleton width={100} />
+                </h1>
+
+                <ul className="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0">
+                  <li className="breadcrumb-item text-muted">
+                    <Link href="#" className="text-muted text-hover-primary">
+                      <Skeleton width={100} />
+                    </Link>
+                  </li>
+                  <li className="breadcrumb-item">
+                    <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                  </li>
+                  <li className="breadcrumb-item text-muted">
+                    <Link href="#" className="text-muted text-hover-primary">
+                      <Skeleton width={100} />
+                    </Link>
+                  </li>
+                  <li className="breadcrumb-item">
+                    <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                  </li>
+                  <li className="breadcrumb-item text-muted">
+                    <Link href="#" className="text-muted text-hover-primary">
+                      <Skeleton width={100} />
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="kt_app_content" className="app-content flex-column-fluid">
+          <div
+            id="kt_app_content_container"
+            className="app-container container-fluid"
+          >
+            <form
+              className="form d-flex flex-column"
+              onSubmit={handleSubmit(onSubmit)}
+              id="form"
+            >
+              <input type="hidden" />
+
+              <div className="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+                <div className="tab-content">
+                  <div
+                    className="tab-pane fade show active"
+                    id="kt_ecommerce_add_product_general"
+                    role="tabpanel"
+                  >
+                    <div className="d-flex flex-column">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={150} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-4">
+                          <div className="mb-5 row">
+                            <label className="required form-label  col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Name
+                            </label>
+                            <div className="col-lg-5 col-md-12 col-sm-12">
+                              <Skeleton width={280} />
+                            </div>
+                            <div className="col-lg-5 col-md-12 col-sm-12">
+                              <Skeleton width={280} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Driver Id
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-5 row">
+                            <label className="col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Landline no
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Mobile no
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              License
+                            </label>
+                            <div className="col-lg-5 col-md-12 mb-md-2 mb-sm-2 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                            <div className="col-lg-5 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Default Language
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Email
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Username
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          {!id && (
+                            <div className="mb-5 row">
+                              <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                Password
+                              </label>
+
+                              <div className="col-lg-5 col-md-12 col-sm-5">
+                                <div className="position-relative">
+                                  <Skeleton width={660} />
+                                </div>
+                              </div>
+
+                              <div className="col-lg-5 col-md-12 col-sm-5">
+                                <div className="position-relative">
+                                  <Skeleton width={660} />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-column mt-8">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={150} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-4">
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Note
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-column mt-8">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={150} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-3">
+                          <div className="mb-6 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Country
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-6 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              State
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+
+                          <div className="mb-6 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              City
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Pincode
+                            </label>
+                            <div className="col-lg-4 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Address
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+
+                          <div className="mb-6 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Timezone
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-5 row">
+                            <label className="required  col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Status
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-column mt-8">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={150} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-3">
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Carrer & Career
+                            </label>
+                            <div className="col-lg-5 col-md-12 col-sm-5">
+                              <Skeleton width={660} />
+                            </div>
+                            <div className="col-lg-5 col-md-12 col-sm-5">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Main Office Address
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12  col-form-label">
+                              Home Terminal
+                            </label>
+                            <div className="col-lg-5 col-md-12 col-sm-5">
+                              <Skeleton width={660} />
+                            </div>
+                            <div className="col-lg-5 col-md-12 col-sm-5">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+
+                          <div className="mb-5 row">
+                            <label className="col-lg-2 col-md-12 col-sm-12 col-form-label"></label>
+                            <div className="col-lg-5 col-md-12 col-sm-5">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-column mt-8">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={250} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-3">
+
+                          <>
+                            <div className="mb-5 row">
+                              <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                Cycle Rule
+                              </label>
+                              <div className="col-lg-10 col-md-12 col-sm-12">
+                                <Skeleton width={660} />
+                              </div>
+                            </div>
+
+                            <div className="mb-5 row">
+                              <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                Cargo Type
+                              </label>
+                              <div className="col-lg-10 col-md-12 col-sm-12">
+                                <Skeleton width={660} />
+                              </div>
+                            </div>
+                          </>
+
+
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Restart
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Rest Break
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Adverse Conditions Exception
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <Skeleton width={100} />
+                  <Skeleton width={100} />
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex flex-column flex-column-fluid">
@@ -1631,7 +1983,7 @@ function DriverForm({ id }) {
                               })}
                               aria-invalid={!errors.is_active}
                             >
-                              <option value="" disabled selected={!id}>
+                              <option value="" disabled>
                                 Select Status
                               </option>
                               <option value="1">Active</option>
@@ -2154,7 +2506,7 @@ function DriverForm({ id }) {
                   <span className='indicator-progress d-flex justify-content-center'>
                     {isLoading ? (
                       <LoadingIcons.TailSpin height={18} />
-                    ) : id ?  'Update' : 'Save'}
+                    ) : id ? 'Update' : 'Save'}
                   </span>
                 </button>
               </div>
