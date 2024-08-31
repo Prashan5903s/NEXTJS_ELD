@@ -64,5 +64,7 @@
   .foregroundDiv table tr:nth-child(4) {
     height: 1%;
   }
-
+  /* .foregroundDiv table tr:nth-child(4) td {
+    border-bottom: 3px solid green !important;
+  } */
 

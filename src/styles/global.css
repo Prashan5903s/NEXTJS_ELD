@@ -370,14 +370,10 @@ li.dt-paging-button.page-item.active{
  display: flex;
  justify-content: start;
 }
-<<<<<<< HEAD
- 
-=======
  /* table td{ */
   /* white-space: nowrap!important; */
 /* } */
 
->>>>>>> origin/main
   table.dataTable > thead > tr {
     color: #78839d!important;
     font-weight: normal!important;

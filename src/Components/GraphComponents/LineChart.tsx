@@ -332,6 +332,7 @@
 // export default LineChart;
 
 
+
 'use client';
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import styles from "../../styles/linechart.module.css";
@@ -388,8 +389,7 @@ function LineChart(params = null) {
       [slug]: [{ color: colors, text: data.name }]
     };
   }) : [];
-
-  const data = val['params'] && val['params'][0] ? val['params'][0].map((item) => {
+  let data = val['params'] && val['params'][0] ? val['params'][0].map((item) => {
     // Initialize mapI
     let mapI = 0; // Default value
 
@@ -412,64 +412,105 @@ function LineChart(params = null) {
     const truckDetails = mappedData ? mappedData.find((data) => data[convertToSlug(item[5])]) : [];
 
     // Calculate the time difference
-    const calculateTimeDifference = (startTime, endTime) => {
-      const timeToMinutes = (time) => {
-        const [hours, minutes] = time.split(':').map(Number);
-        return hours * 60 + minutes;
-      };
-      const minutesToTime = (minutes) => {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-      };
+    // const calculateTimeDifference = (startTime, endTime) => {
+    //   const timeToMinutes = (time) => {
+    //     const [hours, minutes] = time.split(':').map(Number);
+    //     return hours * 60 + minutes;
+    //   };
+    //   const minutesToTime = (minutes) => {
+    //     const hours = Math.floor(minutes / 60);
+    //     const mins = minutes % 60;
+    //     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    //   };
 
-      const startMinutes = timeToMinutes(startTime);
-      const endMinutes = timeToMinutes(endTime);
-      const differenceMinutes = endMinutes - startMinutes;
-      return minutesToTime(differenceMinutes);
-    };
+    //   const startMinutes = timeToMinutes(startTime);
+    //   const endMinutes = timeToMinutes(endTime);
+    //   const differenceMinutes = endMinutes - startMinutes;
+    //   return minutesToTime(differenceMinutes);
+    // };
 
-    // Time difference calculation
-    const timeSl = calculateTimeDifference(item[3], item[4]);
+    // // Time difference calculation
+    // const timeSl = calculateTimeDifference(item[3], item[4]);
 
     // Return the object with the computed status
     return {
       status: mapI,
       stime: item[3],
       etime: item[4],
-      time: timeSl,
+      time: '',
       truckDetails: [truckDetails[convertToSlug(item[5])][0]],
     };
   }) : [];
 
-  data.push({ status: null, stime: '00:00', etime: '00`:00', time: '', truckDetails: null });
+  // data.push({ status: null, stime: '00:00', etime: '00:00', time: '', truckDetails: null });
 
+  console.log('Pushed Data', JSON.stringify(data, null, 2));
+  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
+
+  const timeToMinutes = (time) => {
+    if (time === "20:00") return 24 * 60; // Handle the end case
+    const [hours, mins] = time.split(":").map(Number);
+    return hours * 60 + mins;
+  };
+
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
+  let raw_data = data;
+  console.log('Raw Data', JSON.stringify(raw_data, null, 2));
+
+  const adjustData = (data) => {
+    let previousEndTime = 0;
+    return data.map((item, index) => {
+      let { stime, etime } = item;
+      let stimeInMinutes = timeToMinutes(stime);
+      let etimeInMinutes = timeToMinutes(etime);
+
+      stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
+
+      stimeInMinutes = roundToNearest15(stimeInMinutes);
+      etimeInMinutes = roundToNearest15(etimeInMinutes);
+
+      etimeInMinutes = Math.max(etimeInMinutes, stimeInMinutes + 15);
+
+      previousEndTime = etimeInMinutes;
+
+      return {
+        ...item,
+        stime: minutesToTime(stimeInMinutes),
+        etime: minutesToTime(etimeInMinutes),
+      };
+    });
+  };
+  data = adjustData(raw_data);
+  
   const truckDetails1 = [{ color: 'purple', text: '302' }];
   const truckDetails2 = [{ color: 'red', text: '303' }];
   const truckDetails3 = [{ color: 'green', text: '304' }];
 
-  // // // Complete data
-  const datass = [
-    { status: 1, stime: '0:00', etime: '1:10', time: '', truckDetails: truckDetails2 },
-    { status: 3, stime: '1:10', etime: '3:15', time: '', truckDetails: truckDetails2 },
-    { status: 1, stime: '3:15', etime: '3:30', time: '', truckDetails: truckDetails1 },
-    { status: 1, stime: '3:30', etime: '3:45', time: '', truckDetails: truckDetails1 },
-    { status: 2, stime: '3:45', etime: '5:30', time: '', truckDetails: truckDetails1 },
+  // // Complete data
+  const rawdata = [
+    { status: 2, stime: '0:00', etime: '0:12', time: '', truckDetails: truckDetails2 },
+    { status: 3, stime: '1:12', etime: '1:20', time: '', truckDetails: truckDetails2 },
+    { status: 1, stime: '1:20', etime: '3:30', time: '', truckDetails: truckDetails2 },
+    { status: 2, stime: '3:30', etime: '3:45', time: '', truckDetails: truckDetails2 },
+    { status: 4, stime: '3:45', etime: '5:30', time: '', truckDetails: truckDetails2 },
     { status: 1, stime: '5:30', etime: '6:30', time: '', truckDetails: truckDetails2 },
-    { status: 2, stime: '6:30', etime: '7:00', time: '', truckDetails: truckDetails3 },
+    { status: 2, stime: '6:30', etime: '7:00', time: '', truckDetails: truckDetails2 },
     { status: 3, stime: '7:00', etime: '15:00', time: '', truckDetails: truckDetails2 },
     { status: 4, stime: '15:00', etime: '16:00', time: '', truckDetails: truckDetails2 },
     { status: 3, stime: '16:00', etime: '17:00', time: '', truckDetails: truckDetails2 },
-    { status: 4, stime: '17:00', etime: '18:00', time: '', truckDetails: truckDetails3 },
-    { status: 1, stime: '18:00', etime: '20:00', time: '', truckDetails: truckDetails3 },
-    //we have to send dummy extra entry same as last one. 
-    //I can write the code to do it automatically, but once you will confirm all the tests  
-    { status: null, stime: '20:00', etime: '20:00', time: '', truckDetails: truckDetails3 },
+    { status: 4, stime: '17:00', etime: '18:00', time: '', truckDetails: truckDetails2 },
+    { status: 1, stime: '18:00', etime: '20:00', time: '', truckDetails: truckDetails2 },
+    { status: null, stime: '20:00', etime: '20:00', time: '', truckDetails: truckDetails2 },
   ];
+ 
+  // data.push(rdata);
+   // data.push({ status: 0, stime: '00:00', etime: '00:00', time: '0:00', truckDetails: null });
 
-
-  console.log(data, datass);
-  
+  //console.log('Static Data', JSON.stringify(rawdata, null, 2));
 
   data.forEach((entry) => {
     entry.time = calculateTimeDifference(entry.stime, entry.etime);
