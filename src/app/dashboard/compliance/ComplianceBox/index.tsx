@@ -27,7 +27,7 @@ const ComplianceBox = ({
   positivePercentage: number;
 }) => {
   return (
-    <div style={{ flex: "0 0 460px" }} className="border rounded p-8 mw-450px">
+    <div style={{ flex: "0 0 350px" }} className="border rounded p-8 mw-450px">
       <div className="d-flex justify-content-between">
         <h4 className="mb-0">{title}</h4>
         <a

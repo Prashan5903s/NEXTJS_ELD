@@ -61,7 +61,7 @@ const Sidebar = ({ isCollapsed, mouseEnter, mouseLeave, setSidebarToggle }) => {
         {
           id: "coverage-map",
           title: "Coverage Map",
-          path: "",
+          path: "/dashboard/coverageMap",
         },
         {
           id: "proximity",

@@ -48,14 +48,14 @@ const Page = () => {
     setOpen(!open);
   };
 
-  useEffect(() => {
-    const leftMenu = document.getElementsByClassName("sidebarMenu");
-    if (leftMenu.length > 0) {
-      Array.from(leftMenu).forEach((element) => {
-        (element as HTMLElement).style.display = "none";
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   const leftMenu = document.getElementsByClassName("sidebarMenu");
+  //   if (leftMenu.length > 0) {
+  //     Array.from(leftMenu).forEach((element) => {
+  //       (element as HTMLElement).style.display = "none";
+  //     });
+  //   }
+  // }, []);
 
   const [selectedValue, setSelectedValue] = useState(0);
 
