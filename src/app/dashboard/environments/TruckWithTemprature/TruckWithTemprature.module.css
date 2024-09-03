@@ -1,8 +1,7 @@
 .truckContainer {
   padding: 25px 20px;
   border: 0.5px solid rgb(237 233 233);
-  max-width: 250px;
-  flex: 0 0 250px;
+  width: 31.5%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,4 +23,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  padding-right: 30px;
+  justify-content: center;
+}
+
+@media screen and (max-width: 1124px) {
+  .truckContainer {
+    width: auto;
+    flex: 0 0 250px;
+    max-width: 250px;
+  }
 }

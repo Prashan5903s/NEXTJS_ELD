@@ -22,3 +22,6 @@ tfoot {
 tfoot th {
   font-weight: normal;
 }
+.compliancebox {
+  width: 32%;
+}
