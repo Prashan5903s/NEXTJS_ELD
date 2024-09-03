@@ -1,0 +1,27 @@
+html {
+  font-family: sans-serif;
+  font-size: 14px;
+}
+
+table {
+  border: 0;
+}
+
+tbody {
+  border-bottom: 1px solid lightgray;
+}
+
+th {
+  border-bottom: 1px solid lightgray;
+}
+
+tfoot {
+  color: gray;
+}
+
+tfoot th {
+  font-weight: normal;
+}
+.compliancebox {
+  width: 32%;
+}
