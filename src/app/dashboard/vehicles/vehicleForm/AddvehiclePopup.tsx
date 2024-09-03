@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { debounce } from 'lodash';
+import LoadingIcons from 'react-loading-icons';
 
 const formValidations = {
     name: {
@@ -10,8 +12,8 @@ const formValidations = {
             message: "Name must be at most 60 characters long",
         },
         pattern: {
-            value: /^[A-Za-z\s]+$/i,
-            message: "Name should be only alphabetic characters and spaces",
+            value: /^[A-Za-z0-9\s]+$/i,
+            message: "Name should be only alphanumeric characters and spaces",
         },
     },
     vin: {
@@ -42,8 +44,8 @@ const formValidations = {
             message: "Model must be at most 60 characters long",
         },
         pattern: {
-            value: /^[A-Za-z]+$/i,
-            message: "Model should be only alphabetic characters",
+            value: /^[A-Za-z0-9\s]+$/i,
+            message: "Name should be only alphanumeric characters and spaces",
         },
     },
     year: {
@@ -64,7 +66,7 @@ const formValidations = {
         },
     },
     fuel_tank_secondary: {
-        required: "License state is required",
+        required: "Fuel tank secondary is required",
         maxLength: {
             value: 4,
             message: "Fuel tank secondary must be at most 4 characters long",
@@ -75,7 +77,7 @@ const formValidations = {
         },
     },
     throttle_wifi: {
-        required: "Throttle Wifi  is required",
+        required: "Throttle Wifi is required",
     },
     license_plate: {
         required: "License Plate is required",
@@ -92,18 +94,15 @@ const formValidations = {
 };
 
 const getCookie = (name) => {
-    const nameEQ = `${name}=`;
-    const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-
-    for (const cookie of cookies) {
-        if (cookie.startsWith(nameEQ)) {
-            return cookie.substring(nameEQ.length);
-        }
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(";");
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === " ") c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
     }
-
     return null;
 };
-
 
 const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
     const [vehicleField, setVehicleField] = useState({
@@ -112,19 +111,23 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         make: "",
         model: "",
         year: "",
-        fuel_type: '',
-        fuel_type_primary: '',
-        fuel_type_secondary: '',
-        throttle_wifi: 0,
-        notes: "",
+        fuel_type: "",
+        fuel_tank_primary: "",
+        fuel_tank_secondary: "",
+        throttle_wifi: "",
         license_plate: "",
+        license_state: "",
+        notes: "",
     });
 
     const [errors, setErrors] = useState({});
-    const router = useRouter();
-    const [editData, setEditData] = useState();
     const [formValue, setFormValue] = useState({});
-    const [authenticated, setAuthenticated] = useState(false);
+    const [editData, setEditData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [fuelTypes, setFuelTypes] = useState([]);
+    const [licenseStates, setLicenseStates] = useState([]);
+    const router = useRouter();
+    const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
     const changeVehicleFieldHandler = (e) => {
         setVehicleField({
@@ -135,101 +138,27 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
 
     const validateForm = () => {
         let isValid = true;
-        let errors = {};
+        let newErrors = {};
 
-        for (const [key, value] of Object.entries(formValidations)) {
-            if (value.required && !vehicleField[key]) {
-                errors[key] = `${key.replace(/_/g, ' ')} is required`;
+        for (const [key, validation] of Object.entries(formValidations)) {
+            if (validation.required && !vehicleField[key]) {
+                newErrors[key] = validation.required;
+                isValid = false;
+            } else if (validation.minLength && vehicleField[key]?.length < validation.minLength.value) {
+                newErrors[key] = validation.minLength.message;
+                isValid = false;
+            } else if (validation.maxLength && vehicleField[key]?.length > validation.maxLength.value) {
+                newErrors[key] = validation.maxLength.message;
+                isValid = false;
+            } else if (validation.pattern && !validation.pattern.value.test(vehicleField[key])) {
+                newErrors[key] = validation.pattern.message;
                 isValid = false;
             }
         }
 
-        setErrors(errors);
+        setErrors(newErrors);
         return isValid;
     };
-
-    const onSubmitChange = async (e) => {
-        e.preventDefault();
-        if (id) {
-
-            try {
-                const token = getCookie("token");
-                const response = await axios.put(`${url}/transport/vehicle/${id}`, vehicleField, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 200) {
-                    updateVehiclesList();
-                    close(false);
-                    router.push("/dashboard/vehicles"); // Move the redirect after updating vehicles list
-                } else {
-                    console.error("Failed to save:", response.data);
-                }
-            } catch (error) {
-                console.error("API error:", error.response.data);
-                console.log("Something Wrong");
-
-            }
-
-        } else {
-
-            try {
-                const token = getCookie("token");
-                const response = await axios.post(`${url}/transport/vehicle`, vehicleField, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 200) {
-                    updateVehiclesList();
-                    close(false);
-                    router.push("/dashboard/vehicles"); // Move the redirect after updating vehicles list
-                } else {
-                    console.error("Failed to save:", response.data);
-                }
-            } catch (error) {
-                console.error("API error:", error.response.data);
-                console.log("Something Wrong");
-
-            }
-
-        }
-
-    };
-
-    const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-
-    useEffect(() => {
-        const token = getCookie("token");
-
-        if (token) {
-            axios.get(`${url}/user`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-                .then((response) => {
-                    setAuthenticated(true);
-                    if (response.data.user_type === "TR") {
-                        // handle TR user
-                    } else if (response.data.user_type === "EC") {
-                        router.replace("/company/dashboard");
-                    } else {
-                        console.error("Invalid user type");
-                        router.replace("/");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching user data:", error);
-                    router.replace("/");
-                });
-        } else {
-            router.replace("/");
-        }
-    }, [router, url]);
 
     useEffect(() => {
         async function fetchData() {
@@ -257,77 +186,155 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         fetchData();
     }, [url]);
 
+    const onSubmitChange = async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+
+        setIsLoading(true);
+
+        try {
+            const token = getCookie("token");
+            const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+            if (id) {
+                const response = await axios.put(`${url}/transport/vehicle/${id}`, vehicleField, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.status === 200) {
+                    updateVehiclesList();
+                    close(false);
+                    router.push("/dashboard/vehicles");
+                } else {
+                    setIsLoading(false);
+                    console.error("Failed to save:", response.data);
+                }
+            } else {
+                setIsLoading(true);
+
+                const response = await axios.post(`${url}/transport/vehicle`, vehicleField, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                if (response.status === 200) {
+                    updateVehiclesList();
+                    close(false);
+                    router.push("/dashboard/vehicles");
+                } else {
+                    setIsLoading(false);
+                    console.error("Failed to save:", response.data);
+                }
+            }
+        } catch (error) {
+            setIsLoading(false);
+            console.error("API error:", error.response?.data || error);
+        }
+    };
+
     useEffect(() => {
-        async function fetchEditData() {
+        const token = getCookie("token");
+
+        if (token) {
+            axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/user`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then((response) => {
+                    if (response.data.user_type === "TR") {
+                        // handle TR user
+                    } else if (response.data.user_type === "EC") {
+                        router.replace("/company/dashboard");
+                    } else {
+                        console.error("Invalid user type");
+                        router.replace("/");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching user data:", error);
+                    router.replace("/");
+                });
+        } else {
+            router.replace("/");
+        }
+    }, [router]);
+
+    useEffect(() => {
+        async function fetchData() {
             const token = getCookie("token");
 
             if (!token) {
                 console.error("No token available");
-                return; // You may want to handle this scenario accordingly
+                return;
             }
 
             try {
-                const response = await axios.get(`${url}/transport/vehicle/${id}/edit`, {
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/transport/vehicle/create`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
-                console.log(vehicleField, response.data);
-
-
-                setEditData(response.data);
-                setVehicleField({
-                    ...vehicleField,
-                    ...response.data.vehicle
-                });
-
+                setFuelTypes(response.data.fuelTypes || []);
+                setLicenseStates(response.data.licenseStates || []);
             } catch (error) {
                 console.error("Error fetching data:", error);
-                // Handle error appropriately
             }
         }
 
+        fetchData();
+    }, []);
+
+    const getCookie = (name) => {
+        const nameEQ = `${name}=`;
+        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+
+        for (let i = 0; i < cookies.length; i++) {
+            if (cookies[i].startsWith(nameEQ)) {
+                return cookies[i].substring(nameEQ.length);
+            }
+        }
+
+        return null;
+    };
+
+    // Debounced function
+    const debouncedFetchEditData = useCallback(debounce(async () => {
+        const token = getCookie("token");
+
+        if (!token) {
+            console.error("No token available");
+            return;
+        }
+
+        try {
+            const response = await axios.get(
+                `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/transport/vehicle/${id}/edit`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            setEditData(response.data);
+            setVehicleField({
+                ...vehicleField,
+                ...response.data.vehicle
+            });
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }, 300), [vehicleField, id]);
+
+    useEffect(() => {
         if (id) {
-            fetchEditData();
+            debouncedFetchEditData();
         }
-    }, [url, id]);
-
-    useEffect(() => {
-        async function fetchEditData() {
-            const token = getCookie("token");
-
-            if (!token) {
-                console.error("No token available");
-                return; // You may want to handle this scenario accordingly
-            }
-
-            try {
-                const response = await axios.get(`${url}/transport/vehicle/${id}/edit`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                console.log(vehicleField, response.data);
-
-
-                setEditData(response.data);
-                setVehicleField({
-                    ...vehicleField,
-                    ...response.data.vehicle
-                });
-
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                // Handle error appropriately
-            }
-        }
-
-        // if (id) {
-        //     fetchEditData();
-        // }
-    }, [url, id])
+    }, [id, debouncedFetchEditData]);
 
     return (
         <div className={`modal ${open ? 'showpopup' : ''}`} style={{ display: 'block' }} aria-modal="true" role="dialog">
@@ -344,22 +351,59 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                         </div>
                     </div>
                     <div className="modal-body mx-5 mx-xl-15 my-7">
-                        <form id="kt_modal_add_vehicle_form" className="form fv-plugins-bootstrap5 fv-plugins-framework">
-                            {Object.keys(formValidations).map((field, index) => (
-                                <div className="fv-row mb-7" key={index}>
-                                    <label className="fs-6 fw-semibold form-label mb-2">
-                                        <span className={formValidations[field].required ? "required" : ""}>
-                                            {field.replace(/_/g, ' ').toUpperCase()}
-                                        </span>
-                                    </label>
-
-                                    {field === "make" ? (
+                        <form id="kt_modal_add_vehicle_form" className="form fv-plugins-bootstrap5 fv-plugins-framework" onSubmit={onSubmitChange}>
+                            <div className="row">
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="name">
+                                            <span className="required">
+                                                Name
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="name"
+                                            name="name"
+                                            placeholder="Name"
+                                            value={vehicleField.name}
+                                            onChange={changeVehicleFieldHandler}
+                                            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                                        />
+                                        {errors.name && <div className="invalid-feedback">{errors.name}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="vin">
+                                            <span className="required">
+                                                VIN
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="vin"
+                                            name="vin"
+                                            placeholder="VIN"
+                                            value={vehicleField.vin}
+                                            onChange={changeVehicleFieldHandler}
+                                            className={`form-control ${errors.vin ? 'is-invalid' : ''}`}
+                                        />
+                                        {errors.vin && <div className="invalid-feedback">{errors.vin}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="vin">
+                                            <span className="required">
+                                                Make
+                                            </span>
+                                        </label>
                                         <select
                                             className="form-select form-select-solid"
-                                            name={field}
-                                            aria-label={`Select ${field}`}
+                                            name='make'
+                                            aria-label={`Select Make`}
                                             onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
+                                            value={vehicleField.make}
                                         >
                                             <option value="">Select an option</option>
                                             {formValue?.make?.map(data => (
@@ -368,28 +412,41 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                                 </option>
                                             ))}
                                         </select>
-                                    ) : field === "fuel_type" ? (
+                                        {errors.make && <div style={{ color: 'red' }}>{errors.make}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="model">
+                                            <span className="required">
+                                                Model
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="model"
+                                            name="model"
+                                            placeholder="Model"
+                                            value={vehicleField.model}
+                                            onChange={changeVehicleFieldHandler}
+                                            className={`form-control ${errors.model ? 'is-invalid' : ''}`}
+                                        />
+                                        {errors.model && <div className="invalid-feedback">{errors.model}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="year">
+                                            <span className="required">
+                                                Year
+                                            </span>
+                                        </label>
                                         <select
                                             className="form-select form-select-solid"
-                                            name={field}
-                                            aria-label={`Select ${field}`}
+                                            name="year"
+                                            aria-label={`Select year`}
                                             onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
-                                        >
-                                            <option value="">Select an option</option>
-                                            {formValue?.option?.map(data => (
-                                                <option key={data.option_id} value={data.option_id}>
-                                                    {data.title}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : field === "year" ? (
-                                        <select
-                                            className="form-select form-select-solid"
-                                            name={field}
-                                            aria-label={`Select ${field}`}
-                                            onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
+                                            value={vehicleField.year}
                                         >
                                             <option value="">Select an option</option>
                                             {Array.from({ length: (2024 - 1990 + 1) }, (_, i) => 1990 + i).map(year => (
@@ -398,69 +455,159 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
                                                 </option>
                                             ))}
                                         </select>
-                                    ) : field === "license_state" ? (
+                                        {errors && errors.year && <div style={{ color: 'red' }}>{errors.year}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="fuel_type">
+                                            <span className="required">
+                                                Fuel Type
+                                            </span>
+                                        </label>
                                         <select
                                             className="form-select form-select-solid"
-                                            name={field}
-                                            aria-label={`Select ${field}`}
+                                            name="fuel_type"
+                                            aria-label={`Select Fuel Type`}
                                             onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
+                                            value={vehicleField.fuel_type}
                                         >
                                             <option value="">Select an option</option>
-                                            {formValue?.state?.map((data) => (
-                                                <option key={data.state_id} value={data.state_id}>
-                                                    {data.state_name}
+                                            {formValue?.option?.map(data => (
+                                                <option key={data.option_id} value={data.option_id}>
+                                                    {data.title}
                                                 </option>
                                             ))}
                                         </select>
-                                    ) : field === "fuel_type_primary" || field === "fuel_type_secondary" ? (
+                                        {errors.fuel_type && <div style={{ color: 'red' }}>{errors.fuel_type}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="fuel_tank_primary">
+                                            <span className="required">
+                                                Fuel Tank Primary
+                                            </span>
+                                        </label>
                                         <input
-                                            className="form-control form-control-solid"
-                                            placeholder={`Enter ${field.replace(/_/g, ' ')}`}
-                                            name={field}
+                                            type="text"
+                                            id="fuel_tank_primary"
+                                            name="fuel_tank_primary"
+                                            placeholder="Fuel Tank Primary"
+                                            value={vehicleField.fuel_tank_primary}
                                             onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
+                                            className={`form-control ${errors.fuel_tank_primary ? 'is-invalid' : ''}`}
                                         />
-                                    ) : field === "throttle_wifi" ? (
-                                        <select className="form-select form-select-solid" name={field} value={vehicleField[field]} aria-label={`Select ${field}`} onChange={changeVehicleFieldHandler}>
-                                            <option value="">Select an option</option>
+                                        {errors.fuel_tank_primary && <div className="invalid-feedback">{errors.fuel_tank_primary}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="fuel_tank_secondary">
+                                            <span className="required">
+                                                Fuel Tank Secondary
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="fuel_tank_secondary"
+                                            name="fuel_tank_secondary"
+                                            placeholder="Fuel Tank Secondary"
+                                            value={vehicleField.fuel_tank_secondary}
+                                            onChange={changeVehicleFieldHandler}
+                                            className={`form-control ${errors.fuel_tank_secondary ? 'is-invalid' : ''}`}
+                                        />
+                                        {errors.fuel_tank_secondary && <div className="invalid-feedback">{errors.fuel_tank_secondary}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="throttle_wifi">
+                                            <span className="required">
+                                                Throttle Wifi
+                                            </span>
+                                        </label>
+                                        <select className="form-select form-select-solid" name="throttle_wifi" value={vehicleField.throttle_wifi} aria-label={`Select Throttle Wifi`} onChange={changeVehicleFieldHandler}>
+                                            <option value="">Select Throttle Wifi</option>
                                             {Object.entries(formValue?.throttle_wifi || {}).map(([key, value]) => (
                                                 <option key={key} value={key}>
                                                     {value}
                                                 </option>
                                             ))}
-
-                                            )}
                                         </select>
-                                    ) : (
-                                        <input
-                                            className="form-control form-control-solid"
-                                            placeholder={`Enter ${field.replace(/_/g, ' ')}`}
-                                            name={field}
-                                            onChange={changeVehicleFieldHandler}
-                                            value={vehicleField[field]}
-                                        />
-                                    )}
-
-                                    {errors[field] && <div style={{ color: "red", marginTop: "5px" }}>{errors[field]}</div>}
+                                        {errors.throttle_wifi && <div style={{ color: 'red' }}>{errors.throttle_wifi}</div>}
+                                    </div>
                                 </div>
-                            ))}
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="License state">
+                                            <span className="required">
+                                                License State
+                                            </span>
+                                        </label>
+                                        <select
+                                            className="form-select form-select-solid"
+                                            name="license_state"
+                                            aria-label={`Select License State`}
+                                            onChange={changeVehicleFieldHandler}
+                                            value={vehicleField.license_state}
+                                        >
+                                            <option value="">Select an option</option>
+                                            {formValue && formValue.state && formValue?.state?.map((data) => (
+                                                <option key={data.state_id} value={data.state_id}>
+                                                    {data.state_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.license_state && <div style={{ color: 'red' }}>{errors.license_state}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="license_plate">
+                                            <span className="required">
+                                                License Plate
+                                            </span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="license_plate"
+                                            name="license_plate"
+                                            placeholder="License Plate"
+                                            value={vehicleField.license_plate}
+                                            onChange={changeVehicleFieldHandler}
+                                            className={`form-control ${errors.license_plate ? 'is-invalid' : ''}`}
+                                        />
+                                        {errors && errors.license_plate && <div className="invalid-feedback">{errors.license_plate}</div>}
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="form-group">
+                                        <label htmlFor="notes">Notes</label>
+                                        <textarea
+                                            id="notes"
+                                            name="notes"
+                                            placeholder="Note"
+                                            value={vehicleField.notes}
+                                            onChange={changeVehicleFieldHandler}
+                                            className="form-control"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                             <div className="form-btn-grp w-100 text-center pt-15">
-                                <button type="reset" className="btn-light me-3" data-bs-dismiss="modal" aria-label="Close">
-                                    Discard
-                                </button>
-                                <button type="submit" id="kt_modal_add_vehicle_submit" className="btn btn-primary" onClick={onSubmitChange}>
-                                    <span className="indicator-label">Save</span>
-                                    <span className="indicator-progress">
-                                        Please wait... <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                <button type="button" className="btn btn-light me-3" onClick={() => close(false)}>Cancel</button>
+                                <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
+                                    <span className='indicator-progress d-flex justify-content-center'>
+                                        {isLoading ? <LoadingIcons.TailSpin height={18} /> : id ? "Update" : "Save"}
                                     </span>
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

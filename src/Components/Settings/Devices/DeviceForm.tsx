@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { debounce } from 'lodash';
 import Select from "react-select";
 import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import LoadingIcons from 'react-loading-icons';
 
 type IFormInput = {
     hardware: number;
@@ -22,6 +24,7 @@ function DeviceForm({ id }) {
     const router = useRouter();
     const [device, setDevice] = useState(null);
     const [editDevice, setEditdevice] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const token = getCookie("token");
@@ -112,105 +115,58 @@ function DeviceForm({ id }) {
         timeOut: "5000",
     };
 
-    const adddevice = async (data) => {
+    const fetchEditdevice = useCallback(debounce(async () => {
+        if (!id) return;
         try {
-            const response = await fetch(`${url}/setting/driver/devices`, {
-                method: "POST",
+            const response = await fetch(`${url}/setting/driver/devices/${id}/edit`, {
+                method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(data),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                toastr["error"]("Error adding driver: " + errorData.message);
+            if (response.ok) {
+                const responseData = await response.json();
+                setEditdevice(responseData);
             } else {
-                toastr["success"]("Device added successfully!");
-                router.push("/settings/device");
+                const errorData = await response.json();
+                toastr["error"]("Error fetching driver device: " + errorData.message);
             }
         } catch (error) {
-            toastr["error"]("Error adding driver: " + error.message);
+            toastr["error"]("Error fetching driver device: " + error.message);
         }
-    };
-
-
-    const editdevice = async (id, data) => {
-        try {
-            const response = await fetch(`${url}/setting/driver/devices/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                toastr["error"]("Error updating driver: " + errorData.message);
-            } else {
-                toastr["success"]("Device updated successfully!");
-                router.push("/settings/device");
-            }
-        } catch (error) {
-            toastr["error"]("Error updating driver: " + error.message);
-        }
-    };
+    }, 1000), [id, url, token]);
 
     useEffect(() => {
-        const fetchEditdevice = async () => {
-            if (!id) return;
-            try {
-                const response = await fetch(`${url}/setting/driver/devices/${id}/edit`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setEditdevice(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching driver device: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching driver device: " + error.message);
-            }
-        };
-
         fetchEditdevice();
-    }, [id, url, token]);
+    }, [fetchEditdevice]);
+
+    const fetchDevice = useCallback(debounce(async () => {
+        try {
+            const response = await fetch(`${url}/setting/driver/devices/create`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                setDevice(responseData);
+            } else {
+                const errorData = await response.json();
+                toastr["error"]("Error fetching device data: " + errorData.message);
+            }
+        } catch (error) {
+            toastr["error"]("Error fetching device data: " + error.message);
+        }
+    }, 1000), [url, token]);
 
     useEffect(() => {
-        const fetchdevice = async () => {
-            try {
-                const response = await fetch(`${url}/setting/driver/devices/create`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setDevice(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching device data: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching device data: " + error.message);
-            }
-        };
-
-        fetchdevice();
-    }, [url, token]);
+        fetchDevice();
+    }, [fetchDevice]);
 
 
     useEffect(() => {
@@ -224,11 +180,71 @@ function DeviceForm({ id }) {
         }
     }, [editDevice, setValue]);
 
+    const debouncedAddDevice = useCallback(
+        debounce(async (data) => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${url}/setting/driver/devices`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    setIsLoading(false);
+                    const errorData = await response.json();
+                    toastr["error"]("Error adding driver: " + errorData.message);
+                } else {
+                    setIsLoading(false);
+                    toastr["success"]("Device added successfully!");
+                    router.push("/settings/device");
+                }
+            } catch (error) {
+                setIsLoading(false);
+                toastr["error"]("Error adding driver: " + error.message);
+            }
+        }, 300), // Adjust debounce delay as needed
+        [url, token, router]
+    );
+
+    const debouncedEditDevice = useCallback(
+        debounce(async (id, data) => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${url}/setting/driver/devices/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    setIsLoading(false);
+                    const errorData = await response.json();
+                    toastr["error"]("Error updating driver: " + errorData.message);
+                } else {
+                    setIsLoading(false);
+                    toastr["success"]("Device updated successfully!");
+                    router.push("/settings/device");
+                }
+            } catch (error) {
+                setIsLoading(false);
+                toastr["error"]("Error updating driver: " + error.message);
+            }
+        }, 300), // Adjust debounce delay as needed
+        [url, token, router]
+    );
+
     const onSubmit = async (data) => {
         if (id) {
-            await editdevice(id, data);
+            await debouncedEditDevice(id, data);
         } else {
-            await adddevice(data);
+            await debouncedAddDevice(data);
         }
     };
 
@@ -294,7 +310,7 @@ function DeviceForm({ id }) {
                                     <div className="d-flex flex-column">
                                         <div className="card card-flush py-4">
                                             <div className="text-center">
-                                                <p className="fw-bolder fs-7">DEVICE</p>
+                                                <p className="fw-bolder fs-7">{id ? 'Edit DEVICE' : 'Add DEVICE'}</p>
                                             </div>
                                             <div className="separator my-0"></div>
                                             <div className="card-body mt-4">
@@ -588,11 +604,11 @@ function DeviceForm({ id }) {
                                 <Link href="/dashboard/drivers" className="btn-light me-5">
                                     Cancel
                                 </Link>
-                                <button type="submit" className="btn-primary">
-                                    <span className="indicator-label">Save</span>
-                                    <span className="indicator-progress">
-                                        Please wait...{" "}
-                                        <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
+                                    <span className='indicator-progress d-flex justify-content-center'>
+                                        {isLoading ? (
+                                            <LoadingIcons.TailSpin height={18} />
+                                        ) : id ? 'Update' : 'Save'}
                                     </span>
                                 </button>
                             </div>

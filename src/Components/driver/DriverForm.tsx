@@ -10,6 +10,7 @@ import { SubmitHandler, useForm, Controller, set } from "react-hook-form";
 import { Value } from "sass";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import LoadingIcons from 'react-loading-icons';
 // import '../styles/globals.css'; // Your global styles
 
 type IFormInput = {
@@ -55,6 +56,7 @@ function DriverForm({ id }) {
   const [homeTerminal, setHomeTerminal] = useState(null);
   const [driver, setDriver] = useState(null);
   const [adv, setAdv] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [states, setStates] = useState([]);
@@ -671,6 +673,7 @@ function DriverForm({ id }) {
   };
 
   const addDriver = async (data) => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${url}/driver`, {
         method: "POST",
@@ -685,6 +688,7 @@ function DriverForm({ id }) {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error adding driver:", errorData);
+        setIsLoading(false);
         return;
       } else {
         toastr["success"]("Driver added successfully!");
@@ -694,11 +698,14 @@ function DriverForm({ id }) {
       // Redirect or show success message
       // router.push('/dashboard/drivers');
     } catch (error) {
+      setIsLoading(false);
       console.error("Error adding driver:", error);
     }
   };
 
   const editDriver = async (id, data, token) => {
+
+    setIsLoading(true);
     try {
       const response = await fetch(`${url}/driver/${id}`, {
         method: "PUT",
@@ -714,12 +721,14 @@ function DriverForm({ id }) {
         const errorData = await response.json();
         console.error("Error updating driver:", errorData);
         return;
+        setIsLoading(false);
       } else {
         const responseData = await response.json(); // Assuming response contains JSON data
         toastr["success"]("Driver updated successfully!");
         router.push("/dashboard/drivers");
       }
     } catch (error) {
+      setIsLoading(false);
       console.error("Error updating driver:", error);
     }
   };
@@ -815,7 +824,7 @@ function DriverForm({ id }) {
                 </li>
                 <li className="breadcrumb-item text-muted">
                   <Link href="#" className="text-muted text-hover-primary">
-                    White Label Company
+                    Drivers
                   </Link>
                 </li>
                 <li className="breadcrumb-item">
@@ -2141,11 +2150,11 @@ function DriverForm({ id }) {
                 <Link href="/dashboard/drivers" className="btn-light me-5">
                   Cancel
                 </Link>
-                <button type="submit" className="btn-primary">
-                  <span className="indicator-label">Save</span>
-                  <span className="indicator-progress">
-                    Please wait...{" "}
-                    <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
+                  <span className='indicator-progress d-flex justify-content-center'>
+                    {isLoading ? (
+                      <LoadingIcons.TailSpin height={18} />
+                    ) : id ?  'Update' : 'Save'}
                   </span>
                 </button>
               </div>

@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -32,7 +32,7 @@ const ActivityTable = () => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
-    useEffect(() => {
+    const fetchUsers = async () => {
         function getCookie(name) {
             const nameEQ = `${name}=`;
             const cookies = document.cookie.split(';').map(cookie => cookie.trim());
@@ -48,41 +48,37 @@ const ActivityTable = () => {
 
 
         const token = getCookie("token");
+        if (!token) {
+            console.error('No token available');
+            setLoading(false);
+            return;
+        }
 
-        const fetchUsers = async () => {
-            try {
-                const token = getCookie("token");
-                if (!token) {
-                    console.error("No token available");
-                    return;
-                }
+        try {
+            const response = await axios.get(`${url}/setting/driver/devices`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-                const response = await axios.get(
-                    `${url}/setting/driver/devices`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
+            if (response.status >= 200 && response.status < 300) {
                 setDevice(response.data.device);
-
-                setLoading(false); // Set loading to false when data is fetched
-
-            } catch (error) {
-
-                console.error("Error fetching users:", error);
-
-                setLoading(false); // Set loading to false even if there's an error
-
+            } else {
+                console.error('Unexpected response status:', response.status);
             }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        };
+    // Debounced fetch function
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
 
-        fetchUsers();
-
-    }, [url]);
+    useEffect(() => {
+        debouncedFetchUsers();
+    }, [debouncedFetchUsers]);
 
 
     if (loading) {

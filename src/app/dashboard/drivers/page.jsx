@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -26,48 +26,57 @@ const DriverTable = () => {
         } catch (error) {
             console.error('Error fetching permissions:', error);
         }
-    }, 300); // Adjust the debounce delay as needed
+    }, 1000); // Adjust the debounce delay as needed
 
     useEffect(() => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
-    useEffect(() => {
-        // Function to get cookie by name
-        const getCookie = (name) => {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        };
-
-        // Function to fetch user data
-        const fetchUsers = async () => {
-            try {
-                const token = getCookie('token');
-                if (!token) {
-                    console.error('No token available');
-                    setLoading(false);
-                    return;
+    const fetchUsers = useCallback(debounce(async () => {
+        setLoading(true); // Start loading before fetching
+        try {
+            
+            const getCookie = (name) => {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
                 }
+                return null;
+            };
 
-                const response = await axios.get(`${url}/driver`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setDriver(response.data.user);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            } finally {
-                setLoading(false); // Ensure loading state is updated
+            const token = getCookie('token');
+            if (!token) {
+                console.error('No token available');
+                setError('No token available');
+                return;
             }
-        };
 
-        fetchUsers();
-    }, [url]); // Dependency array should include url
+            // Function to fetch user data
+
+            const response = await axios.get(`${url}/driver`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.status === 200) {
+                setDriver(response.data.user);
+            } else {
+                console.error('Unexpected response status:', response.status);
+                setError('Unexpected response status');
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            // setError('Error fetching users: ' + error.message);
+        } finally {
+            setLoading(false); // Ensure loading state is updated
+        }
+    }, 1000), [url]); // Debounce time in milliseconds and url
+
+    useEffect(() => {
+        fetchUsers(); // Call the debounced function
+    }, [fetchUsers]); // Dependencies array includes fetchUsers
 
 
     if (loading) {

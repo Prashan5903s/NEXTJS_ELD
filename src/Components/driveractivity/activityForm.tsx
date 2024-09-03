@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
+import { debounce } from 'lodash';
 import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import LoadingIcons from 'react-loading-icons';
 
 type IFormInput = {
     driver_status: number;
@@ -18,6 +20,7 @@ function ActivityForm({ id }) {
     const router = useRouter();
     const [activity, setActivity] = useState(null);
     const [editActivity, setEditActivity] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const token = getCookie("token");
@@ -63,106 +66,62 @@ function ActivityForm({ id }) {
         timeOut: "5000",
     };
 
-    const addActivity = async (data) => {
+    const fetchEditActivity = useCallback(async () => {
+        if (!id) return;
         try {
-            const response = await fetch(`${url}/driver/work/activity`, {
-                method: "POST",
+            const response = await fetch(`${url}/driver/work/activity/${id}/edit`, {
+                method: "GET",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(data),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                toastr["error"]("Error adding driver: " + errorData.message);
-            } else {                
-                toastr["success"]("Driver activity successfully!");
-                router.push("/settings/organization/driver-activity");
-            }
-        } catch (error) {
-            toastr["error"]("Error adding driver: " + error.message);
-        }
-    };
-
-
-    const editactivity = async (id, data) => {
-        try {
-            const response = await fetch(`${url}/driver/work/activity/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                toastr["error"]("Error updating driver: " + errorData.message);
+            if (response.ok) {
+                const responseData = await response.json();
+                setEditActivity(responseData);
+                setSelectedDriverStatus(responseData.log.current_shift_status || null);
             } else {
-                toastr["success"]("Driver activity updated successfully!");
-                router.push("/settings/organization/driver-activity");
+                const errorData = await response.json();
+                toastr["error"]("Error fetching driver activity: " + errorData.message);
             }
         } catch (error) {
-            toastr["error"]("Error updating driver: " + error.message);
+            toastr["error"]("Error fetching driver activity: " + error.message);
         }
-    };
-
-    useEffect(() => {
-        const fetchEditActivity = async () => {
-            if (!id) return;
-            try {
-                const response = await fetch(`${url}/driver/work/activity/${id}/edit`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setEditActivity(responseData);
-                    setSelectedDriverStatus(responseData.log.current_shift_status || null);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching driver activity: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching driver activity: " + error.message);
-            }
-        };
-
-        fetchEditActivity();
     }, [id, url, token]);
 
+    // Debounced version of fetchEditActivity
+    const debouncedFetchEditActivity = useCallback(debounce(fetchEditActivity, 300), [fetchEditActivity]);
+
     useEffect(() => {
-        const fetchActivity = async () => {
-            try {
-                const response = await fetch(`${url}/driver/work/activity/create`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+        debouncedFetchEditActivity();
+    }, [debouncedFetchEditActivity]);
 
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setActivity(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching activity data: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching activity data: " + error.message);
+    const fetchActivity = useCallback(debounce(async () => {
+        try {
+            const response = await fetch(`${url}/driver/work/activity/create`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                setActivity(responseData);
+            } else {
+                const errorData = await response.json();
+                toastr["error"]("Error fetching activity data: " + errorData.message);
             }
-        };
+        } catch (error) {
+            toastr["error"]("Error fetching activity data: " + error.message);
+        }
+    }, 1000), [url, token]); // Adjust debounce delay as needed
 
+    useEffect(() => {
         fetchActivity();
-    }, [url, token]);
+    }, [fetchActivity]); // Depend on memoized fetchActivity
 
     useEffect(() => {
         if (editActivity?.log) {
@@ -183,13 +142,68 @@ function ActivityForm({ id }) {
         }
     }, [selectedDriverStatus, setValue, editActivity]);
 
-    const onSubmit = async (data) => {
+    const addActivity = async (data) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${url}/driver/work/activity`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                setIsLoading(false);
+                const errorData = await response.json();
+                toastr["error"]("Error adding driver: " + errorData.message);
+            } else {
+                setIsLoading(false);
+                toastr["success"]("Driver activity successfully!");
+                router.push("/settings/organization/driver-activity");
+            }
+        } catch (error) {
+            setIsLoading(false);
+            toastr["error"]("Error adding driver: " + error.message);
+        }
+    };
+
+    const editActivitys = async (id, data) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${url}/driver/work/activity/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response.ok) {
+                setIsLoading(false);
+                const errorData = await response.json();
+                toastr["error"]("Error updating driver: " + errorData.message);
+            } else {
+                setIsLoading(false);
+                toastr["success"]("Driver activity updated successfully!");
+                router.push("/settings/organization/driver-activity");
+            }
+        } catch (error) {
+            setIsLoading(false);
+            toastr["error"]("Error updating driver: " + error.message);
+        }
+    };
+
+    // Use useCallback to memoize the onSubmit function
+    const onSubmit = useCallback(debounce(async (data) => {
         if (id) {
-            await editactivity(id, data);
+            await editActivitys(id, data);
         } else {
             await addActivity(data);
         }
-    };
+    }, 1000), [id]); // Debounce for 1000ms (1 second)
 
     return (
         <div className="d-flex flex-column flex-column-fluid">
@@ -251,9 +265,9 @@ function ActivityForm({ id }) {
                                     role="tabpanel"
                                 >
                                     <div className="d-flex flex-column">
-                                        <div className="card card-flush py-4">
+                                        <div className="card overflow-visible card-flush py-4">
                                             <div className="text-center">
-                                                <p className="fw-bolder fs-7">DRIVER & ACTIVITY</p>
+                                                <p className="fw-bolder fs-7">{id ? 'Edit DRIVER & ACTIVITY' : 'Add DRIVER & ACTIVITY'}</p>
                                             </div>
                                             <div className="separator my-0"></div>
                                             <div className="card-body mt-4">
@@ -269,13 +283,10 @@ function ActivityForm({ id }) {
                                                                     control={control}
                                                                     defaultValue={editActivity?.log?.current_shift_status}
                                                                     rules={formValidations.driver_status}
-                                                                    render={({
-                                                                        field: { onChange, onBlur, value, ref },
-                                                                    }) => {
-                                                                        const selectedLanguage =
-                                                                            activity?.listOption?.find(
-                                                                                (data) => data.option_id == value
-                                                                            );
+                                                                    render={({ field: { onChange, onBlur, value, ref } }) => {
+                                                                        const selectedLanguage = activity?.listOption?.find(
+                                                                            (data) => data.option_id == value
+                                                                        );
 
                                                                         const formattedValue = selectedLanguage
                                                                             ? {
@@ -297,12 +308,10 @@ function ActivityForm({ id }) {
                                                                                     onChange(newValue);
                                                                                 }}
                                                                                 onBlur={onBlur}
-                                                                                options={activity?.listOption?.map(
-                                                                                    (data) => ({
-                                                                                        value: data.option_id,
-                                                                                        label: data.title,
-                                                                                    })
-                                                                                )}
+                                                                                options={activity?.listOption?.map((data) => ({
+                                                                                    value: data.option_id,
+                                                                                    label: data.title,
+                                                                                }))}
                                                                                 placeholder="Select Driver Status"
                                                                                 className={`react-select-styled react-select-lg ${errors.driver_status ? "is-invalid" : ""}`}
                                                                                 classNamePrefix="react-select"
@@ -327,40 +336,35 @@ function ActivityForm({ id }) {
                                                                     <Controller
                                                                         name="driver_id"
                                                                         control={control}
-                                                                        defaultValue={editActivity?.log?.driver_id || ""} // Initialize default value
+                                                                        defaultValue={editActivity?.log?.driver_id || ""}
                                                                         rules={formValidations.driver_id}
-                                                                        render={({
-                                                                            field: { onChange, onBlur, value, ref },
-                                                                        }) => {
-                                                                            const selectedLanguage =
-                                                                                activity?.driver?.find(
-                                                                                    (data) => data.id === value
-                                                                                );
+                                                                        render={({ field: { onChange, onBlur, value, ref } }) => {
+                                                                            const selectedLanguage = activity?.driver?.find(
+                                                                                (data) => data.id === value
+                                                                            );
 
                                                                             const formattedValue = selectedLanguage
                                                                                 ? {
                                                                                     value: selectedLanguage.id,
-                                                                                    label: selectedLanguage.first_name,
+                                                                                    label: `${selectedLanguage.first_name} ${selectedLanguage.last_name}`,
                                                                                 }
                                                                                 : null;
 
                                                                             return (
                                                                                 <Select
                                                                                     ref={ref}
-                                                                                    value={formattedValue} // Set the formatted value for the Select component
+                                                                                    value={formattedValue}
                                                                                     onChange={(selectedOption) => {
                                                                                         const newValue = selectedOption
                                                                                             ? selectedOption.value
                                                                                             : "";
-                                                                                        onChange(newValue); // Update form state with value
+                                                                                        onChange(newValue);
                                                                                     }}
                                                                                     onBlur={onBlur}
-                                                                                    options={activity?.driver?.map(
-                                                                                        (data) => ({
-                                                                                            value: data.id,
-                                                                                            label: data.first_name,
-                                                                                        })
-                                                                                    )}
+                                                                                    options={activity?.driver?.map((data) => ({
+                                                                                        value: data.id,
+                                                                                        label: `${data.first_name} ${data.last_name}`,
+                                                                                    }))}
                                                                                     placeholder="Select Driver"
                                                                                     className={`react-select-styled react-select-lg ${errors.driver_id ? "is-invalid" : ""
                                                                                         }`}
@@ -387,15 +391,12 @@ function ActivityForm({ id }) {
                                                                     <Controller
                                                                         name="vehicle_id"
                                                                         control={control}
-                                                                        defaultValue={editActivity?.log?.vehicle_id || ""} // Initialize default value
+                                                                        defaultValue={editActivity?.log?.vehicle_id || ""}
                                                                         rules={formValidations.vehicle_id}
-                                                                        render={({
-                                                                            field: { onChange, onBlur, value, ref },
-                                                                        }) => {
-                                                                            const selectedLanguage =
-                                                                                activity?.vechile?.find(
-                                                                                    (data) => data.id === value
-                                                                                );
+                                                                        render={({ field: { onChange, onBlur, value, ref } }) => {
+                                                                            const selectedLanguage = activity?.vechile?.find(
+                                                                                (data) => data.id === value
+                                                                            );
 
                                                                             const formattedValue = selectedLanguage
                                                                                 ? {
@@ -407,20 +408,18 @@ function ActivityForm({ id }) {
                                                                             return (
                                                                                 <Select
                                                                                     ref={ref}
-                                                                                    value={formattedValue} // Set the formatted value for the Select component
+                                                                                    value={formattedValue}
                                                                                     onChange={(selectedOption) => {
                                                                                         const newValue = selectedOption
                                                                                             ? selectedOption.value
                                                                                             : "";
-                                                                                        onChange(newValue); // Update form state with value
+                                                                                        onChange(newValue);
                                                                                     }}
                                                                                     onBlur={onBlur}
-                                                                                    options={activity?.vechile?.map(
-                                                                                        (data) => ({
-                                                                                            value: data.id,
-                                                                                            label: data.name,
-                                                                                        })
-                                                                                    )}
+                                                                                    options={activity?.vechile?.map((data) => ({
+                                                                                        value: data.id,
+                                                                                        label: data.name,
+                                                                                    }))}
                                                                                     placeholder="Select Vehicle"
                                                                                     className={`react-select-styled react-select-lg ${errors.vehicle_id ? "is-invalid" : ""
                                                                                         }`}
@@ -449,7 +448,7 @@ function ActivityForm({ id }) {
                                                                         className={`form-control mb-2 ${errors.message_reason ? "is-invalid" : ""}`}
                                                                         placeholder="Message reason"
                                                                         defaultValue={editActivity?.log?.message_reason}
-                                                                        style={{ height: "150px" }}
+                                                                        style={{ height: "200px" }} // Increased height
                                                                         {...register("message_reason", {
                                                                             validate: (value) => {
                                                                                 if (selectedDriverStatus == 5 && !value) {
@@ -478,11 +477,11 @@ function ActivityForm({ id }) {
                                 <Link href="/dashboard/drivers" className="btn-light me-5">
                                     Cancel
                                 </Link>
-                                <button type="submit" className="btn-primary">
-                                    <span className="indicator-label">Save</span>
-                                    <span className="indicator-progress">
-                                        Please wait...{" "}
-                                        <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
+                                    <span className='indicator-progress d-flex justify-content-center'>
+                                        {isLoading ? (
+                                            <LoadingIcons.TailSpin height={18} />
+                                        ) : id ? 'Update' : 'Save'}
                                     </span>
                                 </button>
                             </div>

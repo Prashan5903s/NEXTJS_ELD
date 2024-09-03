@@ -1,10 +1,14 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { debounce } from 'lodash';
 import { useRouter } from "next/navigation";
+import { getPermissions } from "@/Components/permission/page";
 import Image from "next/image";
 import addrole from '../../../../../public/media/auth/add-role.png';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import styles from './UserRole.module.css';
 
 interface Permission {
@@ -25,6 +29,20 @@ export default function UserRolesComponent(): JSX.Element {
   const [role, setRole] = useState<Role[]>([]); // Initialize role as an empty array
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [permissn, setPermissn] = useState([]);
+
+  const fetchPermissions = debounce(async (setPermissn) => {
+    try {
+      const perms = await getPermissions();
+      setPermissn(perms);
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+    }
+  }, 300); // Adjust the debounce delay as needed
+
+  useEffect(() => {
+    fetchPermissions(setPermissn);
+  }, []); // Empty dependency array ensures this runs only once
 
   function getCookie(name: string): string | null {
     if (typeof window === "undefined") {
@@ -45,35 +63,40 @@ export default function UserRolesComponent(): JSX.Element {
   const token = getCookie("token");
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
-  useEffect(() => {
-
-    const fetchRoles = async () => {
-      try {
-        const token = getCookie("token");
-        if (!token) {
-          console.error("No token available");
-          return;
-        }
-
-        const response = await axios.get(
-          `${url}/setting/organization/user-roles`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setRole(response.data.roles);
-        setLoading(false); // Set loading to false when data is fetched
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setLoading(false); // Set loading to false even if there's an error
+  const fetchRoles = useCallback(debounce(async () => {
+    setLoading(true); // Set loading to true before fetching data
+    try {
+      const token = getCookie('token');
+      if (!token) {
+        console.error('No token available');
+        // setError('No token available');
+        return;
       }
-    };
 
+      const response = await axios.get(`${url}/setting/organization/user-roles`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200) {
+        setRole(response.data.roles);
+      } else {
+        console.error('Unexpected response status:', response.status);
+        // setError('Unexpected response status');
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      // setError('Error fetching roles: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, 300), [url]);
+
+  // Use useEffect to call the debounced fetch function
+  useEffect(() => {
     fetchRoles();
-
-  }, [token, url]);
+  }, [fetchRoles]);
 
   const rolesData: Role[] = role?.map((data) => ({
     id: data.id || 1, // Assuming `data.id` exists, otherwise defaulting to 1
@@ -110,71 +133,100 @@ export default function UserRolesComponent(): JSX.Element {
       <div id="kt_app_content" className="app-content flex-column-fluid">
         <div id="kt_app_content_container" className="app-container container-fluid">
           <div className="row">
-            {rolesData.map((role, index) => {
-              const displayedPermissions = role.permissions.slice(0, 5);
-              const additionalPermissionsCount = role.permissions.length - 5;
-
-              return (
+            {loading ? (
+              Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="col-xl-4 col-lg-6 col-md-12 col-sm-12 mb-md-4 mb-sm-4 mb-lg-4 mb-xl-0 mt-4">
                   <div className="card card-flush h-md-100 shadow-sm">
                     <div className="card-header">
                       <div className="card-title">
-                        <h2>{role.title}</h2>
+                        <Skeleton height={28} width="180px" />
                       </div>
                     </div>
                     <div className="card-body pt-1">
                       <div className="fw-bold text-gray-600 mb-5">
-                        Total users with this role: {role.totalUsers}
+                        <Skeleton height={20} width="220px" />
                       </div>
                       <div className="d-flex flex-column text-gray-600">
-                        {displayedPermissions.map((perm) => (
-                          <div key={perm.id} className="d-flex align-items-center py-2">
-                            <span className="bullet bg-primary me-3"></span>
-                            {perm.label}
+                        {Array.from({ length: 5 }).map((_, permIndex) => (
+                          <div key={permIndex} className="d-flex align-items-center py-2">
+                            {/* <span className="bullet bg-primary me-3"></span> */}
+                            <Skeleton height={18} width="300px" />
                           </div>
                         ))}
-                        {additionalPermissionsCount > 0 && (
-                          <div className="d-flex align-items-center py-2">
-                            <span className="bullet bg-primary me-3"></span>
-                            <em>and {additionalPermissionsCount} more...</em>
-                          </div>
-                        )}
                       </div>
-                      {
-                        role.master !== 0 && (
-                          <div className="pt-1 d-flex justify-content-start">
-                            <Link href={`/settings/organization/user-roles/${role.id}`} className={`${styles.hoverbutton} mt-4 py-3 px-5 fw-bold`}>Edit
-                              Role</Link>
-                          </div>
-                        )
-                      }
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              ))
+            ) : (
+              rolesData.map((role, index) => {
+                const displayedPermissions = role.permissions.slice(0, 5);
+                const additionalPermissionsCount = role.permissions.length - 5;
 
-            <div className="col-xl-4 col-lg-6 col-md-12 col-sm-12 mb-md-4 mb-sm-4 mb-lg-4 mb-xl-0 mt-4">
-              <div className="card card-flush h-md-100 shadow-sm">
-                <div className="card-body d-flex flex-center">
-                  <Link href="/settings/organization/user-roles/add-role" className="btn btn-clear d-flex flex-column flex-center">
-                    <Image
-                      src={addrole}
-                      alt="Add New Role"
-                      className="mw-100 mh-150px mb-7"
-                      width={150}
-                      height={150}
-                    />
-                    <div className="fw-bold fs-3 text-gray-600 text-hover-primary">
-                      Add New Role
+                return (
+                  <div key={index} className="col-xl-4 col-lg-6 col-md-12 col-sm-12 mb-md-4 mb-sm-4 mb-lg-4 mb-xl-0 mt-4">
+                    <div className="card card-flush h-md-100 shadow-sm">
+                      <div className="card-header">
+                        <div className="card-title">
+                          <h2>{role.title}</h2>
+                        </div>
+                      </div>
+                      <div className="card-body pt-1">
+                        <div className="fw-bold text-gray-600 mb-5">
+                          Total users with this role: {role.totalUsers}
+                        </div>
+                        <div className="d-flex flex-column text-gray-600">
+                          {displayedPermissions.map((perm) => (
+                            <div key={perm.id} className="d-flex align-items-center py-2">
+                              <span className="bullet bg-primary me-3"></span>
+                              {perm.label}
+                            </div>
+                          ))}
+                          {additionalPermissionsCount > 0 && (
+                            <div className="d-flex align-items-center py-2">
+                              <span className="bullet bg-primary me-3"></span>
+                              <em>and {additionalPermissionsCount} more...</em>
+                            </div>
+                          )}
+                        </div>
+                        {
+                          role.master !== 0 && permissn.includes(25) && (
+                            <div className="pt-1 d-flex justify-content-start">
+                              <Link href={`/settings/organization/user-roles/${role.id}`} className={`${styles.hoverbutton} mt-4 py-3 px-5 fw-bold`}>Edit
+                                Role</Link>
+                            </div>
+                          )
+                        }
+                      </div>
                     </div>
-                  </Link>
+                  </div>
+                );
+              })
+            )}
+
+            {!loading && permissn.includes(24) && (
+              <div className="col-xl-4 col-lg-6 col-md-12 col-sm-12 mb-md-4 mb-sm-4 mb-lg-4 mb-xl-0 mt-4">
+                <div className="card card-flush h-md-100 shadow-sm">
+                  <div className="card-body d-flex flex-center">
+                    <Link href="/settings/organization/user-roles/add-role" className="btn btn-clear d-flex flex-column flex-center">
+                      <Image
+                        src={addrole}
+                        alt="Add New Role"
+                        className="mw-100 mh-150px mb-7"
+                        width={150}
+                        height={150}
+                      />
+                      <div className="fw-bold fs-3 text-gray-600 text-hover-primary">
+                        Add New Role
+                      </div>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

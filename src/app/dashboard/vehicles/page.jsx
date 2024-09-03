@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import AddVehicleModal from './vehicleForm/AddvehiclePopup';
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -9,12 +9,15 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css';
 import 'datatables.net';
 import $ from 'jquery';
 import dynamic from 'next/dynamic';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import skeleton styles
 
 const VehicleTable = () => {
     const [showModal, setShowModal] = useState(false);
     const [vehicles, setVehicles] = useState([]);
     const [modalMode, setModalMode] = useState('add');
     const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+    const [loading, setLoading] = useState(true); // Add loading state
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const router = useRouter();
     const [authenticated, setAuthenticated] = useState(false);
@@ -27,7 +30,7 @@ const VehicleTable = () => {
         } catch (error) {
             console.error('Error fetching permissions:', error);
         }
-    }, 300); // Adjust the debounce delay as needed
+    }, 1000); // Adjust the debounce delay as needed
 
     useEffect(() => {
         fetchPermissions(setPermissn);
@@ -50,7 +53,6 @@ const VehicleTable = () => {
     };
 
     const getCookie = (name) => {
-        // Your jQuery code
         const nameEQ = `${name}=`;
         const cookies = document.cookie.split(';').map(cookie => cookie.trim());
 
@@ -63,8 +65,9 @@ const VehicleTable = () => {
         return null;
     };
 
-
+    // Function to fetch vehicles
     const fetchVehicles = async () => {
+        setLoading(true); // Set loading to true before fetching
         try {
             const token = getCookie("token");
             if (!token) return;
@@ -75,9 +78,15 @@ const VehicleTable = () => {
             setVehicles(response.data.vehicles || []);
         } catch (error) {
             console.error('Error fetching vehicles:', error);
+        } finally {
+            setLoading(false); // Set loading to false after fetching
         }
     };
 
+    // Debounced fetchVehicles function
+    const debouncedFetchVehicles = useCallback(debounce(fetchVehicles, 1000), [url]);
+
+    // Fetch user data and vehicles
     useEffect(() => {
         const token = getCookie("token");
         if (token) {
@@ -103,8 +112,9 @@ const VehicleTable = () => {
             router.replace("/");
         }
 
-        fetchVehicles();
-    }, [router]);
+        debouncedFetchVehicles(); // Call the debounced function
+
+    }, [router, debouncedFetchVehicles]);
 
     useEffect(() => {
         const initializeDataTable = () => {
@@ -134,7 +144,7 @@ const VehicleTable = () => {
     }, [vehicles]);
 
     const updateVehiclesList = () => {
-        fetchVehicles(); // Refresh the vehicle list
+        debouncedFetchVehicles(); // Refresh the vehicle list
     };
 
     return (
@@ -162,53 +172,107 @@ const VehicleTable = () => {
                     </div>
                     <div className="dataTables_wrapper dt-bootstrap4 no-footer">
                         <div className="table-responsive">
-                            <table id="vehicleTable" className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
-                                <thead>
-                                    <tr className="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
-                                        <th className="min-w-125px">Name</th>
-                                        <th className="min-w-125px">VIN</th>
-                                        <th className="min-w-125px">Make</th>
-                                        <th className="min-w-125px">Model</th>
-                                        <th className="min-w-125px">Year</th>
-                                        <th className="min-w-125px">Harsh Acceleration Setting Type</th>
-                                        <th className="min-w-125px">Notes</th>
-                                        <th className="min-w-125px">License Plate</th>
-                                        <th className="min-w-125px">Status</th>
-                                        <th className="min-w-125px">Created</th>
-                                        <th className="text-end min-w-100px">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="fw-semibold text-gray-600">
-                                    {vehicles.map(vehicle => (
-                                        <tr key={vehicle.id}>
-                                            <td>{vehicle.name}</td>
-                                            <td>{vehicle.vin}</td>
-                                            <td>{vehicle.make}</td>
-                                            <td>{vehicle.model}</td>
-                                            <td>{vehicle.year}</td>
-                                            <td>{vehicle.harsh_acceleration_setting_type}</td>
-                                            <td>{vehicle.notes}</td>
-                                            <td>{vehicle.license_plate}</td>
-                                            <td>
-                                                <div className={`badge badge-light-${vehicle.status ? 'success' : 'danger'}`}>
-                                                    {vehicle.status ? 'Active' : 'De-active'}
-                                                </div>
-                                            </td>
-                                            <td>{formattedDate(vehicle.created_at)}</td>
-                                            <td className="text-end">
-                                                {permissn.includes(2) && (
-                                                    <button className="btn btn-icon btn-active-light-primary w-30px h-30px me-3" onClick={() => openModal('edit', vehicle.id)}>
-                                                        <i className="ki ki-outline ki-pencil fs-3"></i>
-                                                    </button>
-                                                )}
-                                                <label className="form-switch form-check-solid">
-                                                    <input className="form-check-input border" type="checkbox" value="" checked={vehicle.status} onChange={() => {/* handle change */ }} />
-                                                </label>
-                                            </td>
+                            {loading ? (
+                                <table className="table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_tr_u_table">
+                                    <thead>
+                                        <tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                                            <th className="min-w-125px" style={{ width: 308.733 }}>NAME</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>VIN</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>MAKE</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>MODEL</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>YEAR</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>HIGH ACCELERATION SETTING TYPE</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>NOTES</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>LICENSE PLATE</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>STATUS</th>
+                                            <th className="min-w-125px" style={{ width: 125 }}>Joined Date</th>
+                                            {permissn.includes(2) && (
+                                                <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
+                                            )}
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="text-gray-600 fw-semibold">
+                                        {/* Skeleton loaders for rows */}
+                                        {[...Array(5)].map((_, index) => (
+                                            <tr key={index}>
+                                                <td className="d-flex align-items-center">
+                                                    <div className="symbol symbol-circle symbol-50px overflow-hidden me-3">
+                                                        <Skeleton circle={true} height={50} width={50} />
+                                                    </div>
+                                                    <div className="d-flex flex-column">
+                                                        <Skeleton width={100} />
+                                                        <Skeleton width={150} />
+                                                    </div>
+                                                </td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={100} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                <td><Skeleton width={150} /></td>
+                                                {permissn.includes(2) && (
+                                                    <td className="text-end"><Skeleton width={100} /></td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <table id="vehicleTable" className="align-middle table-row-dashed fs-6 gy-5 mb-0 dataTable no-footer">
+                                    <thead>
+                                        <tr className="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0">
+                                            <th className="min-w-125px">Name</th>
+                                            <th className="min-w-125px">VIN</th>
+                                            <th className="min-w-125px">Make</th>
+                                            <th className="min-w-125px">Model</th>
+                                            <th className="min-w-125px">Year</th>
+                                            <th className="min-w-125px">Harsh Acceleration Setting Type</th>
+                                            <th className="min-w-125px">Notes</th>
+                                            <th className="min-w-125px">License Plate</th>
+                                            <th className="min-w-125px">Status</th>
+                                            <th className="min-w-125px">Created</th>
+                                            <th className="text-end min-w-100px">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="fw-semibold text-gray-600">
+                                        {vehicles.length > 0 ? (
+                                            vehicles.map(vehicle => (
+                                                <tr key={vehicle.id}>
+                                                    <td>{vehicle.name}</td>
+                                                    <td>{vehicle.vin}</td>
+                                                    <td>{vehicle.make}</td>
+                                                    <td>{vehicle.model}</td>
+                                                    <td>{vehicle.year}</td>
+                                                    <td>{vehicle.harsh_acceleration_setting_type}</td>
+                                                    <td>{vehicle.notes}</td>
+                                                    <td>{vehicle.license_plate}</td>
+                                                    <td>
+                                                        <div className={`badge badge-light-${vehicle.status ? 'success' : 'danger'}`}>
+                                                            {vehicle.status ? 'Active' : 'De-active'}
+                                                        </div>
+                                                    </td>
+                                                    <td>{formattedDate(vehicle.created_at)}</td>
+                                                    <td className="text-end">
+                                                        {permissn.includes(2) && (
+                                                            <button className="btn btn-icon btn-active-light-primary w-30px h-30px me-3" onClick={() => openModal('edit', vehicle.id)}>
+                                                                <i className="ki ki-outline ki-pencil fs-3"></i>
+                                                            </button>
+                                                        )}
+                                                        <label className="form-switch form-check-solid">
+                                                            <input className="form-check-input border" type="checkbox" value="" checked={vehicle.status} onChange={() => {/* handle change */ }} />
+                                                        </label>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="11" className="text-center">No data available</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </div>
                 </div>

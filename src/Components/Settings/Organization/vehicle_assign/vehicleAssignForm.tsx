@@ -1,11 +1,13 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Select from "react-select";
+import { debounce } from 'lodash';
 import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
+import LoadingIcons from 'react-loading-icons';
 
 type IFormInput = {
     driver_id: number;
@@ -16,6 +18,7 @@ type IFormInput = {
 function VehicleAssignForm({ id }) {
     const router = useRouter();
     const [vehicleAssign, setVehicleAssign] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [editVehicleAssign, setEditVehicleAssign] = useState(null);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
@@ -59,7 +62,140 @@ function VehicleAssignForm({ id }) {
         timeOut: "5000",
     };
 
+    // const addvehicleAssign = async (data) => {
+    //     setIsLoading(true);
+    //     try {
+    //         const response = await fetch(`${url}/setting/driver/vehicleAssigns`, {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //             body: JSON.stringify(data),
+    //         });
+
+    //         if (!response.ok) {
+    //             setIsLoading(false);
+    //             const errorData = await response.json();
+    //             toastr["error"]("Error adding driver: " + errorData.message);
+    //         } else {
+    //             setIsLoading(false);
+    //             toastr["success"]("vehicleAssign added successfully!");
+    //             router.push("/settings/organization/vehicle-assign");
+    //         }
+    //     } catch (error) {
+    //         setIsLoading(false);
+    //         toastr["error"]("Error adding driver: " + error.message);
+    //     }
+    // };
+
+
+    // const editvehicleAssign = async (id, data) => {
+    //     setIsLoading(true);
+    //     try {
+    //         const response = await fetch(`${url}/settings/vehicle/assign/${id}`, {
+    //             method: "PUT",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //             body: JSON.stringify(data),
+    //         });
+
+    //         if (!response.ok) {
+    //             setIsLoading(false);
+    //             const errorData = await response.json();
+    //             toastr["error"]("Error updating driver: " + errorData.message);
+    //         } else {
+    //             setIsLoading(false);
+    //             toastr["success"]("vehicleAssign updated successfully!");
+    //             router.push("/settings/organization/vehicle-assign");
+    //         }
+    //     } catch (error) {
+    //         setIsLoading(false);
+    //         toastr["error"]("Error updating driver: " + error.message);
+    //     }
+    // };
+
+    const fetchEditVehicleAssign = useCallback(debounce(async () => {
+        if (!id) return;
+        try {
+            const response = await fetch(`${url}/settings/vehicle/assign/${id}/edit`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                setEditVehicleAssign(responseData);
+            } else {
+                const errorData = await response.json();
+                toastr["error"]("Error fetching driver vehicleAssign: " + errorData.message);
+            }
+        } catch (error) {
+            toastr["error"]("Error fetching driver vehicleAssign: " + error.message);
+        }
+    }, 1000), [id, url, token]); // Adjust debounce delay as needed
+
+    useEffect(() => {
+        fetchEditVehicleAssign();
+        // Cleanup function to cancel debounce when the component unmounts or dependencies change
+        return () => {
+            fetchEditVehicleAssign.cancel();
+        };
+    }, [fetchEditVehicleAssign]);
+
+    const fetchVehicleAssign = useCallback(debounce(async () => {
+        try {
+            const response = await fetch(`${url}/settings/vehicle/assign/create`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                setVehicleAssign(responseData);
+            } else {
+                const errorData = await response.json();
+                toastr["error"]("Error fetching vehicleAssign data: " + errorData.message);
+            }
+        } catch (error) {
+            toastr["error"]("Error fetching vehicleAssign data: " + error.message);
+        }
+    }, 1000), [url, token]); // Adjust debounce delay as needed
+
+    useEffect(() => {
+        fetchVehicleAssign();
+        // Cleanup function to cancel debounce when the component unmounts or dependencies change
+        return () => {
+            fetchVehicleAssign.cancel();
+        };
+    }, [fetchVehicleAssign]);
+
+    useEffect(() => {
+        if (editVehicleAssign?.vehicleAssign) {
+            setValue("driver_id", editVehicleAssign?.vehicleAssign?.driver_id);
+            setValue("vehicle_id", editVehicleAssign?.vehicleAssign?.vechile_id || "");
+            setValue("is_active", editVehicleAssign?.vehicleAssign?.is_active?.toString() || "");
+        }
+    }, [editVehicleAssign, setValue]);
+
+    // const onSubmit = async (data) => {
+    //     if (id) {
+    //         await editvehicleAssign(id, data);
+    //     } else {
+    //         await addvehicleAssign(data);
+    //     }
+    // };
+
     const addvehicleAssign = async (data) => {
+        setIsLoading(true);
         try {
             const response = await fetch(`${url}/setting/driver/vehicleAssigns`, {
                 method: "POST",
@@ -71,19 +207,22 @@ function VehicleAssignForm({ id }) {
             });
 
             if (!response.ok) {
+                setIsLoading(false);
                 const errorData = await response.json();
                 toastr["error"]("Error adding driver: " + errorData.message);
             } else {
+                setIsLoading(false);
                 toastr["success"]("vehicleAssign added successfully!");
                 router.push("/settings/organization/vehicle-assign");
             }
         } catch (error) {
+            setIsLoading(false);
             toastr["error"]("Error adding driver: " + error.message);
         }
     };
 
-
     const editvehicleAssign = async (id, data) => {
+        setIsLoading(true);
         try {
             const response = await fetch(`${url}/settings/vehicle/assign/${id}`, {
                 method: "PUT",
@@ -95,84 +234,36 @@ function VehicleAssignForm({ id }) {
             });
 
             if (!response.ok) {
+                setIsLoading(false);
                 const errorData = await response.json();
                 toastr["error"]("Error updating driver: " + errorData.message);
             } else {
+                setIsLoading(false);
                 toastr["success"]("vehicleAssign updated successfully!");
                 router.push("/settings/organization/vehicle-assign");
             }
         } catch (error) {
+            setIsLoading(false);
             toastr["error"]("Error updating driver: " + error.message);
         }
     };
 
-    useEffect(() => {
-        const fetchEditvehicleAssign = async () => {
-            if (!id) return;
-            try {
-                const response = await fetch(`${url}/settings/vehicle/assign/${id}/edit`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setEditVehicleAssign(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching driver vehicleAssign: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching driver vehicleAssign: " + error.message);
+    // Create a debounced version of the onSubmit function
+    const handleSubmits = useCallback(
+        debounce(async (data) => {
+            if (id) {
+                setIsLoading(true);
+                await editvehicleAssign(id, data);
+            } else {
+                setIsLoading(true);
+                await addvehicleAssign(data);
             }
-        };
-
-        fetchEditvehicleAssign();
-    }, [id, url, token]);
-
-    useEffect(() => {
-        const fetchVehicleAssign = async () => {
-            try {
-                const response = await fetch(`${url}/settings/vehicle/assign/create`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    setVehicleAssign(responseData);
-                } else {
-                    const errorData = await response.json();
-                    toastr["error"]("Error fetching vehicleAssign data: " + errorData.message);
-                }
-            } catch (error) {
-                toastr["error"]("Error fetching vehicleAssign data: " + error.message);
-            }
-        };
-
-        fetchVehicleAssign();
-    }, [url, token]);
-
-    useEffect(() => {
-        if (editVehicleAssign?.vehicleAssign) {
-            setValue("driver_id", editVehicleAssign?.vehicleAssign?.driver_id);
-            setValue("vehicle_id", editVehicleAssign?.vehicleAssign?.vechile_id || "");
-            setValue("is_active", editVehicleAssign?.vehicleAssign?.is_active?.toString() || "");
-        }
-    }, [editVehicleAssign, setValue]);
+        }, 2000), // Adjust debounce delay as needed
+        [id, addvehicleAssign, editvehicleAssign]
+    );
 
     const onSubmit = async (data) => {
-        if (id) {
-            await editvehicleAssign(id, data);
-        } else {
-            await addvehicleAssign(data);
-        }
+        handleSubmits(data);
     };
 
     return (
@@ -235,9 +326,9 @@ function VehicleAssignForm({ id }) {
                                     role="tabpanel"
                                 >
                                     <div className="d-flex flex-column">
-                                        <div className="card card-flush py-4">
+                                        <div className="card overflow-visible card-flush py-4">
                                             <div className="text-center">
-                                                <p className="fw-bolder fs-7">vehicleAssign</p>
+                                                <p className="fw-bolder fs-7">{id ? 'Edit Vehicle Assign' : 'Add Vehicle Assign'}</p>
                                             </div>
                                             <div className="separator my-0"></div>
                                             <div className="card-body mt-4">
@@ -398,11 +489,11 @@ function VehicleAssignForm({ id }) {
                                 <Link href="/dashboard/drivers" className="btn-light me-5">
                                     Cancel
                                 </Link>
-                                <button type="submit" className="btn-primary">
-                                    <span className="indicator-label">Save</span>
-                                    <span className="indicator-progress">
-                                        Please wait...{" "}
-                                        <span className="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                <button id='kt_sign_in_submit' className='justify-content-center btn-primary' disabled={isLoading}>
+                                    <span className='indicator-progress d-flex justify-content-center'>
+                                        {isLoading ? (
+                                            <LoadingIcons.TailSpin height={18} />
+                                        ) : id ? 'Update' : 'Save'}
                                     </span>
                                 </button>
                             </div>

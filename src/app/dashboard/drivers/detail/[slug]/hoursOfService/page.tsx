@@ -993,7 +993,7 @@
 
 
 "use client";
-import React, { useState, useEffect, lazy, Suspense, memo } from "react";
+import React, { useState, useEffect, lazy, Suspense, memo, useCallback } from "react";
 import Link from "next/link";
 import StepLineChart from "@/Components/driverdetails/StepLineChart";
 import { DateRangePicker } from "react-date-range";
@@ -1005,6 +1005,7 @@ import Skeleton from 'react-loading-skeleton';
 const LineChart = lazy(() => import('@/Components/GraphComponents/LineChart'));
 import { debounce } from 'lodash';
 import { useJsApiLoader } from '@react-google-maps/api';
+import LoadingIcons from 'react-loading-icons';
 
 
 export default function HoursOfService({ params }) {
@@ -1014,6 +1015,7 @@ export default function HoursOfService({ params }) {
   const [isDateOpen, setIsDateOpen] = useState(new Set());
   const [isAllOpen, setIsAllOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isGraphLoading, setGraphLoading] = useState(false);
   const [dropdown, setDropdown] = useState(false);
   const [isViolation, setIsViolation] = useState(false); // Example initialization
   const [dateRange, setDateRange] = useState([
@@ -1086,66 +1088,77 @@ export default function HoursOfService({ params }) {
 
   const token = getCookie("token");
 
-  useEffect(() => {
-    if (!slug) return;
+  const fetchDriverDetails = useCallback(
+    debounce(async () => {
+      if (!slug) return;
 
-    const fetchDriverDetails = async () => {
+      setLoading(true);
+
       try {
         const response = await fetch(`${BackEND}/driver/hos/detail/${slug}`, {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error('Network response was not ok');
         }
 
         const result = await response.json();
-
         setData(result);
+
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
+    }, 1000), // Debounce time in milliseconds
+    [slug, BackEND, token]
+  );
 
-    fetchDriverDetails();
-  }, []);
-
+  // Use useEffect to call the debounced fetch function
   useEffect(() => {
-    if (!slug || !date_start || !date_end) return;
+    fetchDriverDetails();
+  }, [fetchDriverDetails]);
 
-    const fetchLogs = async () => {
+  const fetchLogs = useCallback(
+    debounce(async () => {
+      if (!slug || !date_start || !date_end) return;
+
       setLoading(true); // Ensure loading state is true when fetching logs
+
       try {
         const response = await fetch(`${BackEND}/driver/date/log/${slug}/${date_start}/${date_end}`, {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          throw new Error('Network response was not ok');
         }
 
         const result = await response.json();
-
         setLog(result);
+
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false); // Ensure loading state is false after fetching logs
       }
-    };
+    }, 1000), // Debounce time in milliseconds
+    [slug, date_start, date_end, BackEND, token]
+  );
 
+  // Use useEffect to call the debounced fetch function
+  useEffect(() => {
     fetchLogs();
-  }, [slug, date_start, date_end]); // Depend on slug, date_start, and date_end
+  }, [fetchLogs]);
 
   const handleDropdown = () => {
     setDropdown(!dropdown);
@@ -1174,9 +1187,6 @@ export default function HoursOfService({ params }) {
     setIsAllOpen(newExpandedRows.size === finalData.length);
   };
 
-
-
-
   const handleSelect = (ranges) => {
     setDateRange([ranges.selection]); // Update the date range state
 
@@ -1190,47 +1200,50 @@ export default function HoursOfService({ params }) {
     setOpen(false); // Close the date range picker
   };
 
-
   const toggleDatePicker = () => {
     setOpen(!open);
   };
 
+  const graphHosData = useCallback(
+    debounce(async (date) => {
+      setLoading(true); // Set loading state to true before fetching logs
+      try {
+        const response = await fetch(`${BackEND}/graph/chart/data/${driverId}/${date}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  const graphHosData = async (date) => {
-    setLoading(true); // Set loading state to true before fetching logs
-    try {
-      const response = await fetch(`${BackEND}/graph/chart/data/${driverId}/${date}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+        const result = await response.json();
+        return result;
+
+      } catch (err) {
+        setError(err.message);
+        return null; // Return null if the request fails
+      } finally {
+        setLoading(false); // Ensure loading state is false after fetching logs
       }
-
-      const result = await response.json();
-      return result;
-
-    } catch (err) {
-      setError(err.message);
-      return null; // Return null or a default value if the request fails
-    } finally {
-      setLoading(false); // Ensure loading state is false after fetching logs
-    }
-  };
+    }, 1000), // Debounce time in milliseconds
+    [BackEND, driverId, token] // Dependencies
+  );
 
   const fetchGraphData = async (dateKey) => {
-    setLoading(true);
+    setLoading(true); // Set loading state to true before fetching
     try {
       const result = await graphHosData(dateKey);
-      setGraphDataMap(prev => ({ ...prev, [dateKey]: result }));
+      if (result) {
+        setGraphDataMap(prev => ({ ...prev, [dateKey]: result }));
+      }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading state is false after fetching
     }
   };
 

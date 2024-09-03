@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from "next/navigation";
@@ -49,13 +49,13 @@ const VehicleAssignTable: React.FC = () => {
         } catch (error) {
             console.error('Error fetching permissions:', error);
         }
-    }, 300); // Adjust the debounce delay as needed
+    }, 1000); // Adjust the debounce delay as needed
 
     useEffect(() => {
         fetchPermissions(setPermissn);
     }, []); // Empty dependency array ensures this runs only once
 
-    useEffect(() => {
+    const fetchUsers = async () => {
         function getCookie(name) {
             const nameEQ = `${name}=`;
             const cookies = document.cookie.split(';').map(cookie => cookie.trim());
@@ -70,36 +70,37 @@ const VehicleAssignTable: React.FC = () => {
         }
 
         const token = getCookie("token");
+        if (!token) {
+            console.error('No token available');
+            setLoading(false);
+            return;
+        }
 
-        const fetchUsers = async () => {
-            try {
-                if (!token) {
-                    console.error("No token available");
-                    return;
-                }
+        try {
+            const response = await axios.get(`${url}/settings/vehicle/assign`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-                const response = await axios.get(
-                    `${url}/settings/vehicle/assign`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
+            if (response.status >= 200 && response.status < 300) {
                 setVehicleAssign(response.data);
-
-                setLoading(false); // Set loading to false when data is fetched
-
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                setLoading(false); // Set loading to false even if there's an error
+            } else {
+                console.error('Unexpected response status:', response.status);
             }
-        };
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchUsers();
+    // Debounced fetch function
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
 
-    }, [url]);
+    useEffect(() => {
+        debouncedFetchUsers();
+    }, [debouncedFetchUsers]);
 
     if (loading) {
         // Render loading effect while data is being fetched
@@ -121,7 +122,7 @@ const VehicleAssignTable: React.FC = () => {
                                     placeholder="Search Product"
                                 />
                             </div>
-                            {permissn.includes(10) && (
+                            {permissn.includes(27) && (
                                 <div className="btnGroup">
                                     <Link href='./vehicle-assign/add-assign' className="btn-primary">
                                         <i className='ki-outline ki-plus-square fs-3' style={{ marginRight: '8px' }}></i>
@@ -138,7 +139,7 @@ const VehicleAssignTable: React.FC = () => {
                                             <th className="min-w-125px" style={{ width: 308.733 }}>Driver</th>
                                             <th className="min-w-125px" style={{ width: 125 }}>Vehicle</th>
                                             <th className="min-w-125px" style={{ width: 125 }}>STATUS</th>
-                                            {permissn.includes(11) && (
+                                            {permissn.includes(28) && (
                                                 <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
                                             )}
                                         </tr>
@@ -158,7 +159,7 @@ const VehicleAssignTable: React.FC = () => {
                                                 </td>
                                                 <td><Skeleton width={150} /></td>
                                                 <td><Skeleton width={150} /></td>
-                                                {permissn.includes(11) && (
+                                                {permissn.includes(28) && (
                                                     <td className="text-end"><Skeleton width={100} /></td>
                                                 )}
                                             </tr>
@@ -232,7 +233,7 @@ const VehicleAssignTable: React.FC = () => {
                                 placeholder="Search Product"
                             />
                         </div>
-                        {permissn.includes(10) && (
+                        {permissn.includes(27) && (
                             <div className="btnGroup">
                                 <Link href='./vehicle-assign/add-assign' className="btn-primary">
                                     <i className='ki-outline ki-plus-square fs-3' style={{ marginRight: '8px' }}></i>
@@ -249,7 +250,7 @@ const VehicleAssignTable: React.FC = () => {
                                         <th className="min-w-125px" style={{ width: 308.733 }}>Driver</th>
                                         <th className="min-w-125px" style={{ width: 125 }}>Vehicle</th>
                                         <th className="min-w-125px" style={{ width: 125 }}>STATUS</th>
-                                        {permissn.includes(11) && (
+                                        {permissn.includes(28) && (
                                             <th className="text-end min-w-100px" style={{ width: 100 }}>Actions</th>
                                         )}
                                     </tr>
@@ -275,7 +276,7 @@ const VehicleAssignTable: React.FC = () => {
                                                     <div className="badge badge-light-danger">Inactive</div>
                                                 )}
                                                 </td>
-                                                {permissn.includes(11) && (
+                                                {permissn.includes(28) && (
                                                     <td className="text-end">
                                                         <Link href={`./vehicle-assign/${assignment.id}`} className="btn btn-light btn-active-light-primary btn-flex btn-center btn-sm">
                                                             Actions <i className="ki ki-outline ki-down fs-5 ms-1"></i>

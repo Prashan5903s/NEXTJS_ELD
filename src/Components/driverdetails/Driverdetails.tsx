@@ -1,15 +1,16 @@
 // "use client";
-// import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState, useCallback } from "react";
 // import Link from "next/link";
 // import classes from "./DriverDetails.module.css";
+// import StepLineChart from "./StepLineChart";
 // import { useParams } from "next/navigation";
+// import { debounce } from 'lodash';
 // import Skeleton from "react-loading-skeleton";
+// import dynamic from 'next/dynamic';
 // import "react-loading-skeleton/dist/skeleton.css";
 // import { useJsApiLoader, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 // import myImage from '../../../public/logo/a.png'; // Ensure this path is correct
 // import LineChart from "../GraphComponents/LineChart";
-// import { debounce } from 'lodash';
-// import { getPermissions } from "../permission/page";
 
 // const mapContainerStyle = {
 //   height: "86vh",
@@ -37,7 +38,7 @@
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState(null);
 //   const [graph, setGraphData] = useState(null);
-//   const [permissn, setPermissn] = useState([]);
+//   const [isLoading, setIsLoading] = useState(false);
 //   const [isDetailOpen, setIsDetailOpen] = useState(false);
 //   const [isHourOpen, setIsHourOpen] = useState(false);
 //   const [mapLoaded, setMapLoaded] = useState(false);
@@ -47,6 +48,9 @@
 //   const { slug } = useParams();
 
 //   function getCookie(name) {
+//     if (typeof window === "undefined") {
+//       return null;
+//     }
 //     const nameEQ = name + "=";
 //     const ca = document.cookie.split(";");
 
@@ -58,40 +62,26 @@
 
 //     return null;
 //   }
+
 //   const token = getCookie("token");
 
-//   const fetchPermissions = debounce(async (setPermissn) => {
-//     try {
-//       const perms = await getPermissions();
-//       setPermissn(perms);
-//     } catch (error) {
-//       console.error('Error fetching permissions:', error);
-//     }
-//   }, 300); // Adjust the debounce delay as needed
+//   const fetchData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
 
-//   useEffect(() => {
-//     fetchPermissions(setPermissn);
-//   }, []); // Empty dependency array ensures this runs only once
-
-//   useEffect(() => {
-//     if (!slug) return;
-
-//     const fetchData = async () => {
 //       try {
 //         const response = await fetch(`${BackEND}/driver/detail/${slug}`, {
-//           method: "GET",
+//           method: 'GET',
 //           headers: {
-//             "Content-Type": "application/json",
+//             'Content-Type': 'application/json',
 //             Authorization: `Bearer ${token}`,
 //           },
 //         });
 
-//         console.log('Response:', response.ok);
-
 //         if (!response.ok) {
-//           const errorText = await response.text(); // Get the response body text for more details
+//           const errorText = await response.text();
 //           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
-//           console.log(`Error details: ${errorText}`); // Log the detailed error message
+//           console.log(`Error details: ${errorText}`);
 //           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
 //         }
 
@@ -102,14 +92,56 @@
 //       } finally {
 //         setLoading(false);
 //       }
-//     };
-
-//     fetchData();
-//   }, [slug, token]);
+//     }, 1000), // Debounce delay in milliseconds
+//     [] // Dependency array for useCallback
+//   );
 
 //   useEffect(() => {
+//     fetchData(slug, token);
+//   }, [slug, token, fetchData]);
 
-//     const graphData = async () => {
+
+//   const fetchMapData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
+
+//       setLoading(true); // Start loading before fetching data
+//       try {
+//         const response = await fetch(`${BackEND}/driver/location/data/${slug}`, {
+//           method: 'GET',
+//           headers: {
+//             'Content-Type': 'application/json',
+//             Authorization: `Bearer ${token}`,
+//           },
+//         });
+
+//         if (!response.ok) {
+//           const errorText = await response.text(); // Get the response body text for more details
+//           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+//           console.log(`Error details: ${errorText}`);
+//           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+//         }
+
+//         const results = await response.json();
+//         setMapData(results);
+//       } catch (err) {
+//         setError(err.message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     }, 1000), // Debounce delay in milliseconds
+//     [BackEND] // Dependency array for useCallback
+//   );
+
+//   useEffect(() => {
+//     fetchMapData(slug, token);
+//   }, [slug, token, fetchMapData]);
+
+//   const fetchGraphData = useCallback(
+//     debounce(async (slug, token) => {
+//       if (!slug) return;
+
+//       setIsLoading(true); // Start loading before fetching data
 //       try {
 //         const response = await fetch(`${BackEND}/graph/chart/data/${slug}`, {
 //           method: "GET",
@@ -125,61 +157,21 @@
 
 //         const results = await response.json();
 
-//         console.log('Result', results);
-
-
 //         setGraphData(results);
 
 //       } catch (err) {
+//         setIsLoading(false);
 //         setError(err.message);
 //       } finally {
 //         setLoading(false);
 //       }
-//     };
-
-//     graphData();
-
-//   }, [slug, token])
-
-
-//   console.log('Graph DATA', slug);
-
+//     }, 1000), // Debounce delay in milliseconds
+//     [BackEND] // Dependency array for useCallback
+//   );
 
 //   useEffect(() => {
-//     if (!slug) return;
-
-//     const fetchMapData = async () => {
-//       try {
-//         const response = await fetch(`${BackEND}/driver/location/data/${slug}`, {
-//           method: "GET",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         });
-
-//         console.log('Response:', response.ok);
-
-//         if (!response.ok) {
-//           const errorText = await response.text(); // Get the response body text for more details
-//           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
-//           console.log(`Error details: ${errorText}`); // Log the detailed error message
-//           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
-//         }
-
-//         const results = await response.json();
-//         setMapData(results);
-//       } catch (err) {
-//         console.error('Error fetching map data:', err); // Log the error
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchMapData();
-//   }, [slug, token, BackEND]);
-
+//     fetchGraphData(slug, token);
+//   }, [slug, token, fetchGraphData]);
 
 //   useEffect(() => {
 //     if (!Array.isArray(mapData) || mapData.length === 0) return;
@@ -233,11 +225,12 @@
 //       });
 //     };
 
+
 //     const updateMarkerIcons = async () => {
 //       const icons = {};
 //       for (const vehicle of vehicleDatas) {
-//         const rotatedIcon = await createRotatedIcon(myImage.src, vehicle?.rotation);
-//         icons[vehicle?.name] = rotatedIcon;
+//         const rotatedIcon = await createRotatedIcon(myImage.src, vehicle.rotation);
+//         icons[vehicle.name] = rotatedIcon;
 //       }
 //       setMarkerIcons(icons);
 //     };
@@ -245,6 +238,20 @@
 //     updateMarkerIcons();
 //   }, [vehicleDatas, myImage]);
 
+//   useEffect(() => {
+//     const handleZoom = (event) => {
+//       if (window.innerWidth > 2500 && (event.ctrlKey || event.metaKey)) {
+//         if (event.key === '-') {
+//           event.preventDefault();
+//         }
+//       }
+//     };
+
+//     document.addEventListener('keydown', handleZoom);
+//     return () => {
+//       document.removeEventListener('keydown', handleZoom);
+//     };
+//   }, []);
 //   const handleMapLoad = () => {
 //     setMapLoaded(true);
 //   };
@@ -278,490 +285,14 @@
 //     setIsHourOpen(!isHourOpen);
 //   };
 
-//   return (
-
-//     <div className="container-fluid">
-//       <div className="row">
-//         <div className={`col-6 ${classes.leftSideScroll}`}>
-//           <Link
-//             href="/dashboard/drivers"
-//             className="align-items-start flex-column btn btn-outline btn-outline btn-outline-muted btn-active-light-secondary"
-//           >
-//             <i className="ki-duotone ki-left"></i> Back
-//           </Link>
-//           <h3 className="align-items-start flex-column fs-2 fw-bold text-gray-800 mt-5">
-//             {data && data.length > 0 ? (
-//               <div>
-//                 {data[0].first_name} {data[0].last_name}
-//               </div>
-//             ) : ('')}
-
-//           </h3>
-//           <div className="mb-4">
-//             <i className="ki-duotone ki-phone align-middle fs-4">
-//               <span className="path1"></span>
-//               <span className="path2"></span>
-//             </i>
-//             <span className="fs-7">
-//               {data && data.length > 0 ? (
-//                 <div>
-//                   {data[0].mobile_no}
-//                 </div>
-//               ) : ('')}
-//             </span>
-//           </div>
-//           <div>
-//             <span className="fs-7">
-//               <i className="ki-duotone align-middle ki-notepad fs-4">
-//                 <span className="path1"></span>
-//                 <span className="path2"></span>
-//                 <span className="path3"></span>
-//                 <span className="path4"></span>
-//                 <span className="path5"></span>
-//               </i>
-//               <span className="border-bottom border-dark-subtle">
-//                 View Driver Record
-//               </span>
-//             </span>
-//             <div>
-//               <i className="ki-duotone align-middle ki-tablet fs-4">
-//                 <span className="path1"></span>
-//                 <span className="path2"></span>
-//                 <span className="path3"></span>
-//               </i>
-//               <span className="fs-7">Signed out from v.2420.202.12103</span>
-//             </div>
-//           </div>
-
-//           <div className="separator my-5"></div>
-
-//           <div className="accordion accordion-icon-toggle">
-//             <div className="mb-5">
-//               <div
-//                 className="accordion-header py-3 d-flex"
-//                 data-bs-toggle="collapse"
-//                 data-bs-target="#kt_accordion_2_item_1"
-//                 onClick={handleToggleDetail}
-//               >
-//                 <span className="">
-//                   <i
-//                     className={`ki-duotone ${isDetailOpen ? "ki-up" : "ki-down"} fs-5 fw-bolder`}
-//                   ></i>
-//                 </span>
-//                 <h4 className="fw-bold mb-0 ms-4">Details</h4>
-//               </div>
-//               {isDetailOpen && (
-//                 <div className="fs-7">
-//                   <div className="d-flex justify-content-between mt-4">
-//                     <div>
-//                       <p>Driver License</p>
-//                     </div>
-//                     {data && data.length > 0 ? (
-//                       <div>
-
-//                         {data[3].licenseNumber}
-
-//                       </div>
-//                     ) : ('')}
-
-//                   </div>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//           <div className="separator my-5"></div>
-
-//           <div className="accordion accordion-icon-toggle" id="kt_accordion_2">
-//             <div className="mb-5">
-//               <div
-//                 className="accordion-header py-3 d-flex"
-//                 onClick={handleToggleHour}
-//               >
-//                 <span className="">
-//                   <i
-//                     className={`ki-duotone ${isHourOpen ? "ki-up" : "ki-down"} fs-5 fw-bolder`}
-//                   ></i>
-//                 </span>
-//                 <h5 className="fw-bold mb-0 ms-4">Hours of Service</h5>
-//               </div>
-//               {isHourOpen && (
-//                 <div className="fs-7 ">
-//                   <div className={`d-flex justify-content-between mt-4 ${classes.expandDiv}`}>
-//                     <div>
-//                       <p>Log</p>
-//                     </div>
-//                     {permissn.includes(37) && (
-//                       <div>
-//                         <Link
-//                           href={`/dashboard/drivers/detail/${slug}/hoursOfService`}
-//                           className="border-bottom border-dark-subtle link-dark"
-//                         >
-//                           View log details
-//                         </Link>
-//                       </div>
-//                     )}
-//                   </div>
-//                   <div className={`${classes.chartDiv}`} >
-//                     <LineChart params={graph} />
-//                   </div>
-//                   <table style={{ width: '95%', paddingTop: '5%' }}>
-//                     <tbody>
-//                       <tr>
-//                         <td className="text-start fw-normal">Duty status</td>
-//                         <td className="text-end fw-semibold">
-//                           {data[5]
-//                             ?
-//                             <span className="badge text-bg-dark">
-//                               {data[5]}
-//                             </span>
-//                             :
-//                             <span className="badge text-bg-dark">Off duty</span>
-//                           }
-//                         </td>
-//                       </tr>
-//                       <tr>
-//                         <td className="text-start fw-normal">Time in current status</td>
-//                         {data[2]
-//                           ?
-//                           <td className="text-end fw-normal">{data[2]}</td>
-//                           :
-//                           <td className="text-end fw-normal">00:00:00</td>
-//                         }
-//                       </tr>
-//                       <tr>
-//                         <td className="text-start fw-normal">Time until break</td>
-//                         {data[8]
-//                           ?
-//                           <td className="text-end fw-normal">{data[8]}</td>
-//                           :
-//                           <td className="text-end fw-normal">08:00:00</td>
-//                         }
-//                       </tr>
-//                       <tr>
-//                         <td className="text-start fw-normal">Drive remaining</td>
-//                         {data[7]
-//                           ?
-//                           <td className="text-end fw-normal">{data[7]}</td>
-//                           :
-//                           <td className="text-end fw-normal">11:00:00</td>
-//                         }
-//                       </tr>
-//                       <tr>
-//                         <td className="text-start fw-normal">Shift remaining</td>
-//                         {data[4]
-//                           ?
-//                           <td className="text-end fw-normal">{data[4]}</td>
-//                           :
-//                           <td className="text-end fw-normal">14:00:00</td>
-//                         }
-//                       </tr>
-//                       <tr>
-//                         <td className="text-start fw-normal">Cycle remaining</td>
-//                         {data[6]
-//                           ?
-//                           <td className="text-end fw-normal">{data[6]}</td>
-//                           :
-//                           <td className="text-end fw-normal">60:00:00</td>
-//                         }
-//                       </tr>
-//                       {/* <tr>
-//                         <td className="text-start fw-normal">Cycle tomorrow</td>
-//                         <td className="text-end fw-normal">70:00:00</td>
-//                       </tr> */}
-//                     </tbody>
-//                   </table>
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//         <div className={`col-6 overflow-hidden ${classes.mapDiv}`}>
-//           {isLoaded && (
-//             <GoogleMap
-//               onLoad={handleMapLoad}
-//               mapContainerStyle={mapContainerStyle}
-//               center={center}
-//               zoom={5}
-//             >
-//               {vehicleDatas.map((vehicle) => (
-//                 <Marker
-//                   key={vehicle.name}
-//                   position={{ lat: vehicle.lat, lng: vehicle.lng }}
-//                   icon={markerIcons[vehicle.name] ? {
-//                     url: markerIcons[vehicle.name],
-//                     scaledSize: new window.google.maps.Size(60, 60),
-//                     anchor: new window.google.maps.Point(30, 30),
-//                   } : {
-//                     url: myImage.src, // Fallback to default image if needed
-//                     scaledSize: new window.google.maps.Size(60, 60),
-//                     anchor: new window.google.maps.Point(30, 30),
-//                   }}
-//                   onMouseOver={() => setHoveredMarker(vehicle.name)}
-//                   onMouseOut={() => setHoveredMarker(null)}
-//                 >
-//                   {hoveredMarker === vehicle.name && (
-//                     <InfoWindow
-//                       options={{ pixelOffset: new window.google.maps.Size(0, -20) }}
-//                     >
-//                       <div className="p-2 bg-light fs-4 rounded shadow-sm">
-//                         <h6 className="fw-bold mb-0 fs-4">{vehicle.name}</h6>
-//                       </div>
-//                     </InfoWindow>
-//                   )}
-//                 </Marker>
-//               ))}
-//             </GoogleMap>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-
-//     // <div className="container-fluid">
-//     //   <div className="row">
-//     //     <div className={`col-4 ${classes.leftSideScroll}`}>
-//     //       <Link
-//     //         href="/dashboard/drivers"
-//     //         className="align-items-start flex-column btn btn-outline btn-outline btn-outline-muted btn-active-light-secondary"
-//     //       >
-//     //         <i className="ki-duotone ki-left"></i> Back
-//     //       </Link>
-//     //       <h3 className="align-items-start flex-column fs-2 fw-bold text-gray-800 mt-5">
-//     //         {data && data.length > 0 && (
-//     //           <>
-//     //             {data[0].first_name} {data[0].last_name}
-//     //           </>
-//     //         )}
-//     //       </h3>
-//     //       <div className="mb-4">
-//     //         <i className="ki-duotone ki-phone align-middle fs-4">
-//     //           <span className="path1"></span>
-//     //           <span className="path2"></span>
-//     //         </i>
-//     //         {data && data.length > 0 && (
-//     //           <>
-//     //             <span className="fs-7">{data[0].mobile_no}</span>
-//     //           </>
-//     //         )}
-//     //       </div>
-//     //       <div>
-//     //         <span className="fs-7">
-//     //           <i className="ki-duotone align-middle ki-notepad fs-4">
-//     //             <span className="path1"></span>
-//     //             <span className="path2"></span>
-//     //             <span className="path3"></span>
-//     //             <span className="path4"></span>
-//     //             <span className="path5"></span>
-//     //           </i>
-//     //           <span className="border-bottom border-dark-subtle">
-//     //             View Driver Record
-//     //           </span>
-//     //         </span>
-//     //         <div>
-//     //           <i className="ki-duotone align-middle ki-tablet fs-4">
-//     //             <span className="path1"></span>
-//     //             <span className="path2"></span>
-//     //             <span className="path3"></span>
-//     //           </i>
-//     //           <span className="fs-7">Signed out from v.2420.202.12103</span>
-//     //         </div>
-//     //       </div>
-
-//     //       <div className="separator my-5"></div>
-
-//     //       <div className="accordion accordion-icon-toggle">
-//     //         <div className="mb-5">
-//     //           <div
-//     //             className="accordion-header py-3 d-flex"
-//     //             data-bs-toggle="collapse"
-//     //             data-bs-target="#kt_accordion_2_item_1"
-//     //             onClick={handleToggleDetail}
-//     //           >
-//     //             <span className="">
-//     //               <i
-//     //                 className={`ki-duotone ${isDetailOpen ? "ki-up" : "ki-down"} fs-5 fw-bolder`}
-//     //               ></i>
-//     //             </span>
-//     //             <h4 className="fw-bold mb-0 ms-4">Details</h4>
-//     //           </div>
-//     //           {isDetailOpen && (
-//     //             <div className="fs-7">
-//     //               <div className="d-flex justify-content-between mt-4">
-//     //                 <div>
-//     //                   <p>Driver License</p>
-//     //                 </div>
-//     //                 {data && data.length > 0 && (
-//     //                   <>
-//     //                     <div>{data[3].licenseNumber}</div>
-//     //                   </>
-//     //                 )}
-//     //               </div>
-//     //             </div>
-//     //           )}
-//     //         </div>
-//     //       </div>
-//     //       <div className="separator my-5"></div>
-
-//     //       <div className="accordion accordion-icon-toggle" id="kt_accordion_2">
-//     //         <div className="mb-5">
-//     //           <div
-//     //             className="accordion-header py-3 d-flex"
-//     //             onClick={handleToggleHour}
-//     //           >
-//     //             <span className="">
-//     //               <i
-//     //                 className={`ki-duotone ${isHourOpen ? "ki-up" : "ki-down"} fs-5 fw-bolder`}
-//     //               ></i>
-//     //             </span>
-//     //             <h5 className="fw-bold mb-0 ms-4">Hours of Service</h5>
-//     //           </div>
-//     //           {isHourOpen && (
-//     //             <div className="fs-7">
-//     //               <div className="d-flex justify-content-between mt-4">
-//     //                 <div>
-//     //                   <p>Log</p>
-//     //                 </div>
-//     //                 {permissn.includes(37) && (
-//     //                   <div>
-//     //                     <Link
-//     //                       href={`/dashboard/drivers/${slug}/hoursOfService`}
-//     //                       className="border-bottom border-dark-subtle link-dark"
-//     //                     >
-//     //                       View log details
-//     //                     </Link>
-//     //                   </div>
-//     //                 )}
-//     //               </div>
-//     //               <div className="">
-//     //                 <LineChart />
-//     //               </div>
-//     //               <table>
-//     //                 <tbody>
-//     //                   {data && data.length > 0 && (
-//     //                     <>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Duty status</td>
-//     //                         <td className="text-end fw-semibold">
-//     //                           {data[5]
-//     //                             ?
-//     //                             <span className="badge text-bg-dark">{data[5]}</span>
-//     //                             :
-//     //                             <span className="badge text-bg-dark">Off duty</span>
-//     //                           }
-//     //                         </td>
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Time in current status</td>
-//     //                         {data[2]
-//     //                           ?
-//     //                           <td className="text-end fw-normal">{data[2]}</td>
-//     //                           :
-//     //                           <td className="text-end fw-normal">00:00:00</td>
-//     //                         }
-
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Time until break</td>
-//     //                         {data[8]
-//     //                           ?
-//     //                           <td className="text-end fw-normal">{data[8]}</td>
-//     //                           :
-//     //                           <td className="text-end fw-normal">08:00:00</td>
-//     //                         }
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Drive remaining</td>
-//     //                         {data[7]
-//     //                           ?
-//     //                           <td className="text-end fw-normal">{data[7]}</td>
-//     //                           :
-//     //                           <td className="text-end fw-normal">11:00:00</td>
-//     //                         }
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Shift remaining</td>
-//     //                         {data[8]
-//     //                           ?
-//     //                           <td className="text-end fw-normal">{data[4]}</td>
-//     //                           :
-//     //                           <td className="text-end fw-normal">14:00:00</td>
-//     //                         }
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Cycle remaining</td>
-//     //                         {data[8]
-//     //                           ?
-//     //                           <td className="text-end fw-normal">{data[6]}</td>
-//     //                           :
-//     //                           <td className="text-end fw-normal">60:00:00</td>
-//     //                         }
-//     //                       </tr>
-//     //                       <tr>
-//     //                         <td className="text-start fw-normal">Cycle tomorrow</td>
-//     //                         <td className="text-end fw-normal">70:00:00</td>
-//     //                       </tr>
-//     //                     </>
-//     //                   )}
-//     //                 </tbody>
-//     //               </table>
-//     //             </div>
-//     //           )}
-//     //         </div>
-//     //       </div>
-//     //     </div>
-//     //     <div className="col-8 overflow-hidden">
-//     //       {isLoaded && (
-//     //         <GoogleMap
-//     //           onLoad={handleMapLoad}
-//     //           mapContainerStyle={mapContainerStyle}
-//     //           center={center}
-//     //           zoom={5}
-//     //         >
-//     //           {vehicleDatas.map((vehicle) => (
-//     //             <Marker
-//     //               key={vehicle.name}
-//     //               position={{ lat: vehicle.lat, lng: vehicle.lng }}
-//     //               icon={markerIcons[vehicle.name] ? {
-//     //                 url: markerIcons[vehicle.name],
-//     //                 scaledSize: new window.google.maps.Size(60, 60),
-//     //                 anchor: new window.google.maps.Point(30, 30),
-//     //               } : {
-//     //                 url: myImage.src, // Fallback to default image if needed
-//     //                 scaledSize: new window.google.maps.Size(60, 60),
-//     //                 anchor: new window.google.maps.Point(30, 30),
-//     //               }}
-//     //               onMouseOver={() => setHoveredMarker(vehicle.name)}
-//     //               onMouseOut={() => setHoveredMarker(null)}
-//     //             >
-//     //               {hoveredMarker === vehicle.name && (
-//     //                 <InfoWindow
-//     //                   options={{ pixelOffset: new window.google.maps.Size(0, -20) }}
-//     //                 >
-//     //                   <div className="p-2 bg-light fs-4 rounded shadow-sm">
-//     //                     <h6 className="fw-bold mb-0 fs-4">{vehicle.name}</h6>
-//     //                   </div>
-//     //                 </InfoWindow>
-//     //               )}
-//     //             </Marker>
-//     //           ))}
-//     //         </GoogleMap>
-//     //       )}
-//     //     </div>
-//     //   </div>
-//     // </div>
-
-//   );
-// }
-
-
-
-
-"use client";
-import React, { useEffect, useState } from "react";
+'use client'
+import React, {  useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import classes from "./DriverDetails.module.css";
-import StepLineChart from "./StepLineChart";
 import { useParams } from "next/navigation";
+import { debounce } from 'lodash';
 import Skeleton from "react-loading-skeleton";
+import dynamic from 'next/dynamic';
 import "react-loading-skeleton/dist/skeleton.css";
 import { useJsApiLoader, GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
 import myImage from '../../../public/logo/a.png'; // Ensure this path is correct
@@ -780,11 +311,6 @@ const center = {
 export default function Driverdetails() {
   const BackEND = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   const MapKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_KEY;
-  // const [display, setDisplay] = useState(false);
-
-  // useEffect(() => {
-  //   setTimeout(() => setDisplay(true), 10000);
-  // }, []);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -798,6 +324,7 @@ export default function Driverdetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [graph, setGraphData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isHourOpen, setIsHourOpen] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -807,6 +334,9 @@ export default function Driverdetails() {
   const { slug } = useParams();
 
   function getCookie(name) {
+    if (typeof window === "undefined") {
+      return null;
+    }
     const nameEQ = name + "=";
     const ca = document.cookie.split(";");
 
@@ -818,25 +348,26 @@ export default function Driverdetails() {
 
     return null;
   }
+
   const token = getCookie("token");
 
-  useEffect(() => {
-    if (!slug) return;
+  const fetchData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
 
-    const fetchData = async () => {
       try {
         const response = await fetch(`${BackEND}/driver/detail/${slug}`, {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          const errorText = await response.text(); // Get the response body text for more details
+          const errorText = await response.text();
           console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
-          console.log(`Error details: ${errorText}`); // Log the detailed error message
+          console.log(`Error details: ${errorText}`);
           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
@@ -847,27 +378,33 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
-  }, [slug, token]);
-  
+    }, 1000), // Debounce delay in milliseconds
+    [] // Dependency array for useCallback
+  );
 
   useEffect(() => {
-    if (!slug) return;
+    fetchData(slug, token);
+  }, [slug, token, fetchData]);
 
-    const fetchMapData = async () => {
+  const fetchMapData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
+
+      setLoading(true); // Start loading before fetching data
       try {
         const response = await fetch(`${BackEND}/driver/location/data/${slug}`, {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          const errorText = await response.text(); // Get the response body text for more details
+          console.log(`Network response was not ok: ${response.status} ${response.statusText}`);
+          console.log(`Error details: ${errorText}`);
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
         const results = await response.json();
@@ -877,14 +414,19 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchMapData();
-  }, [slug, token, BackEND]);
+    }, 1000), // Debounce delay in milliseconds
+    [BackEND] // Dependency array for useCallback
+  );
 
   useEffect(() => {
+    fetchMapData(slug, token);
+  }, [slug, token, fetchMapData]);
 
-    const graphData = async () => {
+  const fetchGraphData = useCallback(
+    debounce(async (slug, token) => {
+      if (!slug) return;
+
+      setIsLoading(true); // Start loading before fetching data
       try {
         const response = await fetch(`${BackEND}/graph/chart/data/${slug}`, {
           method: "GET",
@@ -903,15 +445,18 @@ export default function Driverdetails() {
         setGraphData(results);
 
       } catch (err) {
+        setIsLoading(false);
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    };
+    }, 1000), // Debounce delay in milliseconds
+    [BackEND] // Dependency array for useCallback
+  );
 
-    graphData();
-
-  }, [slug, token]);
+  useEffect(() => {
+    fetchGraphData(slug, token);
+  }, [slug, token, fetchGraphData]);
 
   useEffect(() => {
     if (!Array.isArray(mapData) || mapData.length === 0) return;
@@ -980,11 +525,6 @@ export default function Driverdetails() {
 
   useEffect(() => {
     const handleZoom = (event) => {
-      // if (window.innerWidth < 2000 && (event.ctrlKey || event.metaKey)) {
-      //   if (event.key === '+' || event.key === '=') {
-      //     event.preventDefault();
-      //   }
-      // }
       if (window.innerWidth > 2500 && (event.ctrlKey || event.metaKey)) {
         if (event.key === '-') {
           event.preventDefault();
@@ -997,6 +537,7 @@ export default function Driverdetails() {
       document.removeEventListener('keydown', handleZoom);
     };
   }, []);
+
   const handleMapLoad = () => {
     setMapLoaded(true);
   };
@@ -1030,8 +571,6 @@ export default function Driverdetails() {
     setIsHourOpen(!isHourOpen);
   };
 
-
-
   return (
     <div className="container-fluid" style={{ minWidth: '1200px', overflow: 'auto' }}>
       <div className="row">
@@ -1043,14 +582,14 @@ export default function Driverdetails() {
             <i className="ki-duotone ki-left"></i> Back
           </Link>
           <h3 className="align-items-start flex-column fs-2 fw-bold text-gray-800 mt-5">
-            {data[0] && data[0].first_name} {data[0] && data[0].last_name}
+            {data && data[0] && data[0].first_name} {data && data[0] && data[0].last_name}
           </h3>
           <div className="mb-4">
             <i className="ki-duotone ki-phone align-middle fs-4">
               <span className="path1"></span>
               <span className="path2"></span>
             </i>
-            <span className="fs-7">{data[0].mobile_no}</span>
+            <span className="fs-7">{data && data[0] && data[0].mobile_no}</span>
           </div>
           <div>
             <span className="fs-7">
@@ -1098,7 +637,7 @@ export default function Driverdetails() {
                     <div>
                       <p>Driver License</p>
                     </div>
-                    <div>{data[3].licenseNumber}</div>
+                    <div>{data && data[3] && data[3].licenseNumber}</div>
                   </div>
                 </div>
               )}
@@ -1137,7 +676,9 @@ export default function Driverdetails() {
                   <div className="fs-7">
                     <div className={`d-flex justify-content-around mt-4`}>
                       <div className={`${classes.chartDiv}`} >
-                        <LineChart params={graph} />
+                        {isLoading ?
+                          <LineChart params={graph} /> : ""
+                        }
                       </div>
                     </div></div>
                   <table>
