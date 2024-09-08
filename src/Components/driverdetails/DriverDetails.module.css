@@ -1,0 +1,52 @@
+.mapDiv{
+  margin-top: 10px;
+  min-width: 50%;
+  overflow: auto !important;
+}
+.leftSideScroll {
+  max-height: 78vh !important;
+  max-height: 78vh !important;
+  overflow: auto !important;
+  max-width: 900px;
+  min-width: 800px;
+}
+
+.chartDiv{
+  width: 830px;
+  min-width: 800px;
+  margin:0px
+}
+
+.graphcontainer, .graphclass{
+  display: none;
+}
+.linechartContainer{
+  justify-content: left;
+}
+
+/* .expandDiv{
+  width: 95%;
+} */
+
+.chartDiv tr:nth-child(1){
+  height: 2.8% !important;
+}
+
+.chartDiv table tr:nth-child(2) {
+  height: 2.5% !important;
+}
+
+.chartDiv table tr:nth-child(3) {
+  height: 2.5% !important;
+}
+.chartDiv table tr:nth-child(4) {
+  height: 0% !important;
+}
+
+.chartDiv div >table{
+  margin:0px;
+  height: 92%;
+}
+
+
+
