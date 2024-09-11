@@ -486,25 +486,38 @@ function yProcessData(data) {
   };
   return valueMap[data] !== undefined ? valueMap[data] : null;
 }
-  // Adjustment for 15-minute interval
-  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
-  // Function to convert and round time to nearest 15-minute interval
-  const adjustxData = (times) => {
+// Function to round minutes to the nearest 15-minute interval
+const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
+
+// Maximum allowed time in minutes (23:45)
+const MAX_TIME = 23 * 60 + 45;
+
+// Function to adjust time values to the nearest 15-minute interval and ensure max time is 23:45
+const adjustxData = (times) => {
   return times.map(time => {
-    // Check if time is valid before splitting
-    if (!time) {
+    // Check if time is valid before processing
+    if (!time || !time.includes(":")) {
       console.error("Invalid time value:", time);
       return ""; // Return an empty string or some default value if time is invalid
     }
-    
+
     // Split hours and minutes
     let [hours, mins] = time.split(":").map(Number);
+
+    // Ensure hours and minutes are valid numbers
+    if (isNaN(hours) || isNaN(mins)) {
+      console.error("Invalid time format, could not parse hours/minutes:", time);
+      return ""; // Return an empty string or default value
+    }
 
     // Convert to total minutes
     let totalMinutes = hours * 60 + mins;
 
-    // Round to nearest 15 minutes (or adjust as needed)
-    totalMinutes = Math.round(totalMinutes / 15) * 15;
+    // Round to nearest 15 minutes
+    totalMinutes = roundToNearest15(totalMinutes);
+
+    // Ensure total minutes do not exceed 23:45
+    totalMinutes = Math.min(totalMinutes, MAX_TIME);
 
     // Convert back to hours and minutes
     hours = Math.floor(totalMinutes / 60);
