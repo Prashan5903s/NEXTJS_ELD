@@ -13,10 +13,6 @@
   padding-top: 0px;
 }
 
-.backgroundDiv {
-  padding-top: 0px;
-}
-
 .apexCharts {
   margin-top: 0px;
   padding-top: 0px;
@@ -34,13 +30,14 @@
 }
 
 .foregroundDiv {
-  width: 94%;
+  width: 95%;
   height: 80%;
   position: absolute;
   top: 21%;
-  left: 4.6%;
+  left: 3.8%;
   z-index: 3;
   background-color: transparent;
+  pointer-events: none; /* Ensure it doesn't block clicks */
 }
 
 .foregroundDiv table {
@@ -68,5 +65,14 @@
 .myTable :global(.table:not(.table-bordered) tfoot tr:last-child td),
 .myTable :global(.table:not(.table-bordered) tbody tr:last-child th),
 .myTable :global(.table:not(.table-bordered) tbody tr:last-child td) {
-  border-bottom: 1px solid red  !important;
+  border-bottom: 1px solid red !important;
 }
+
+/* Ensure that the .foregroundDiv is transparent but doesn't block interaction with the background */
+.backgroundDiv {
+  z-index: 1;
+  pointer-events: auto; /* Background div should allow interactions */
+  padding-top: 0px;
+
+}
+

@@ -23,14 +23,12 @@ function Chart({ processedData, params = null, data }) {
   //   xAxis = [    '6.30', '6.45', '7.15', '8.45', '23.45'];
   //  const yAxis = ['4','    3',    '1',    '2',     '1',    null];
 
-  ///CREATING DATA FOR TOOLTIPS INFO OF GRAPH LINE (NOT VISIBLE ON GRAPH    BUG)
+
+  ///CREATING DATA FOR TOOLTIPS INFO OF GRAPH LINE 
 
   let ySeriesData = data.map(point => point.status);
   let xSeriesData = data.map(point => point.stime);
   console.log('xSeriesData....' + ySeriesData + 'xSeriesData-------' + xSeriesData);
-
-
-
 
 
  ///////////////////////////////////////HERE STARTS THE NEW CODE LOGIC ////////////////////////////////////////////////////////////////
@@ -326,6 +324,25 @@ console.log('lastEtime....     ' + lastEtime + 'xAxis-------   ' + xAxis);
         opacity: anno.opacity,
       })),
     },
+    // tooltip: {
+    //   enabled: true,
+    //   x: {
+    //     show: true,
+    //   },
+    //   y: {
+    //     formatter: (value, { seriesIndex, dataPointIndex, w }) => {
+    //       const xValue = xSeriesData[dataPointIndex] || "";
+    //       value = xValue;
+    //       return value;
+    //     }
+    //   }
+    // }
+
+
+//////////TOOLTIP NEED FIX //////////////////////
+/////////////////VISIT:    https://apexcharts.com/react-chart-demos/line-charts/line-chart-annotations/         /////////////////////
+
+
     tooltip: {
       enabled: true,
       x: {
@@ -333,12 +350,15 @@ console.log('lastEtime....     ' + lastEtime + 'xAxis-------   ' + xAxis);
       },
       y: {
         formatter: (value, { seriesIndex, dataPointIndex, w }) => {
-          const xValue = xSeriesData[dataPointIndex] || "";
-          const yValue = ySeriesData[dataPointIndex] || "";
-          return `Time: ${xValue}, Status: ${yValue}`;
+          // Access the stime from the xSeriesData array
+          const stime = xSeriesData[dataPointIndex] || "No stime";
+    
+          // Return the stime instead of the value
+          return stime;
         }
       }
     }
+    
 
   };
 
