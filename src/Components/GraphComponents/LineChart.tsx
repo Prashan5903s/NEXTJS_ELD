@@ -420,60 +420,7 @@ function LineChart(params = null) {
     };
   }) : [];
 
-  // data.push({ status: null, stime: '00:00', etime: '00:00', time: '', truckDetails: null });
-
-
-  //Adjustment for 15 minutes interval
-  console.log('Pushed Data', JSON.stringify(data, null, 2));
-  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
-
-  const timeToMinutes = (time) => {
-    if (time === "20:00") return 24 * 60; // Handle the end case
-    const [hours, mins] = time.split(":").map(Number);
-    return hours * 60 + mins;
-  };
-
-  const minutesToTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-  };
-  
-  //let raw_data = data;
-  // console.log('Raw Data', JSON.stringify(raw_data, null, 2));
-
-  const adjustData = (data) => {
-    let previousEndTime = 0;
-    return data.map((item, index) => {
-      let { stime, etime } = item;
-      let stimeInMinutes = timeToMinutes(stime);
-      let etimeInMinutes = timeToMinutes(etime);
-
-      stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
-
-      stimeInMinutes = roundToNearest15(stimeInMinutes);
-      etimeInMinutes = roundToNearest15(etimeInMinutes);
-
-      etimeInMinutes = Math.max(etimeInMinutes, stimeInMinutes + 15);
-
-      previousEndTime = etimeInMinutes;
-
-      return {
-        ...item,
-        stime: minutesToTime(stimeInMinutes),
-        etime: minutesToTime(etimeInMinutes),
-      };
-    });
-  };
-  let optimisedData = adjustData(data);
-  console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
-
-  optimisedData.forEach((entry) => {
-    entry.time = calculateTimeDifference(entry.stime, entry.etime);
-  });
-  optimisedData = processedOData(optimisedData);
-
-    //Adjustment END for 15 minutes interval
+  //  data.push({ status: null, stime: '00:00', etime: '00:00', time: '', truckDetails: null });
 
   data.forEach((entry) => {
     entry.time = calculateTimeDifference(entry.stime, entry.etime);
@@ -584,7 +531,7 @@ function LineChart(params = null) {
           <GraphLabels />
           {/* <Chart processedData={processedData} /> */}
           <Suspense fallback={<div>Loading Chart...</div>}>
-            <LazyChart processedData={processedData} params={params}  oData = {optimisedData} data= {data} />
+            <LazyChart processedData={processedData} params={params} data= {data} />
           </Suspense>
           <TimeFields timeMap={timeMap} />
         </div>
@@ -629,19 +576,6 @@ const processedRawData = (data, transformedData, colorLineData) => {
     const colorLine = [];
     colorLine.push(colorLineData);
     result.push({ totalTime, status, singleTruckDetails, truckDetails, colorLineData });
-  });
-  return result;
-};
-const processedOData = (data) => {
-  const result = [];
-  data.forEach(item => {
-    const status = item.status;
-    const timeParts = item.time.split(':');
-    const hours = parseInt(timeParts[0], 10);
-    const minutes = parseInt(timeParts[1], 10).toFixed(2);
-    const totalTime = hours + '.' + minutes;
-    parseFloat(totalTime).toFixed(2);
-    result.push({ totalTime, status });
   });
   return result;
 };

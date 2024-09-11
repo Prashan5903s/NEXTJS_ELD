@@ -8,68 +8,97 @@ import { bottom } from '@popperjs/core';
 // // Load the ApexCharts library dynamically to avoid server-side rendering issues
 const LineChart = dynamic(() => import('react-apexcharts'), { ssr: false, loading: () => <p>Loading...</p> });
 
-function Chart({ processedData, params = null, oData, data }) {
+function Chart({ processedData, params = null, data }) {
 
-  let ySeriesData = data.map(point => point.status);
-  let xSeriesData = data.map(point => point.time);
-  console.log('xSeriesData....' + ySeriesData + 'xSeriesData-------' + xSeriesData);
-  // Generate xData as cumulative sum of totalTime
+//OLD SLOW DATA 1440 because of for loops
+
   // const xTooltipLabels = Array.from({ length: 1440 }, (_, i) => {
   //   const hours = String(Math.floor(i / 60)).padStart(2, '0');
   //   const minutes = String(i % 60).padStart(2, '0');
   //   return `${hours}:${minutes}`;
   // });
 
-  //Adjustment for 15 minutes interval
-  console.log('Chart  oData', JSON.stringify(data, null, 2));
+  //data for testing 
+  //   let xAxis = [];
+  //   xAxis = [    '6.30', '6.45', '7.15', '8.45', '23.45'];
+  //  const yAxis = ['4','    3',    '1',    '2',     '1',    null];
+
+  ///CREATING DATA FOR TOOLTIPS INFO OF GRAPH LINE (NOT VISIBLE ON GRAPH    BUG)
+
+  let ySeriesData = data.map(point => point.status);
+  let xSeriesData = data.map(point => point.stime);
+  console.log('xSeriesData....' + ySeriesData + 'xSeriesData-------' + xSeriesData);
+
+
+
+
+
+ ///////////////////////////////////////HERE STARTS THE NEW CODE LOGIC ////////////////////////////////////////////////////////////////
+
+  //Adjustment for 15 minutes interval for x axis 
+  console.log('Chart  data', JSON.stringify(data, null, 2));
 
   const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
     const hours = String(Math.floor(i * 15 / 60)).padStart(2, '0');
     const minutes = String(i * 15 % 60).padStart(2, '0');
     return `${hours}:${minutes}`;
   });
-  //console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
+
+/// Extract stime values
+let xAxis = data.map(point => point.stime);
+let lastEtime = null;
+if (data.length > 0) {
+  lastEtime = data[(data.length )-1].etime;
+}
+
+xAxis.push(lastEtime);
+// Adjust the times for 15 minutes intervals
+xAxis = adjustxData(xAxis);
+console.log('lastEtime....     ' + lastEtime + 'xAxis-------   ' + xAxis);
 
 
-  const xAxis = [];
-  let cumulativeHours = 0;
-  let cumulativeMinutes = 0;
+  let yAxis = processedData.map(point => point.status);
+  let lastStatus = null;
+  if (data.length > 0) {
+    lastStatus = data[(data.length )-1].status;
+  }
+  yAxis.push(lastStatus);
 
-  oData.forEach(point => {
-    const [hours, minutes, seconds] = point.totalTime.split('.').map(Number);
-
-    cumulativeHours += hours;
-    cumulativeMinutes += minutes + Math.floor(seconds / 60);
-
-    if (cumulativeMinutes >= 60) {
-      cumulativeHours += Math.floor(cumulativeMinutes / 60);
-      cumulativeMinutes = cumulativeMinutes % 60;
-    }
-
-    const formattedTime = `${cumulativeHours}.${cumulativeMinutes.toString().padStart(2, '0')}`;
-    xAxis.push(formattedTime);
-  });
-  const yAxis = processedData.map(point => point.status);
-
+ 
   //final data sent to graph
+  //xAxis = [...xAxis, "23.45"];
+  //yAxis = [...yAxis, '1'];
+  console.log('yAxis....' + yAxis + 'xAxis-------' + xAxis);
+
   const xData = ["0.00", ...xAxis];
   const yData = [...yAxis];
-
-  //prints graph data
   console.log('Ystatus....' + yData + 'XDATA-------' + xData);
-  //Ystatus....4,3,1,2,1XDATA-------0.00,0.18,0.18,0.47,2.14,17.29
+
 
   // Map xData to indices in the 15-minute intervals array
   const mappedData = new Array(xLabels.length).fill(null);
+
   xData.forEach((time, index) => {
-    const [hours, minutes] = time.split('.');
-    const formattedTime = `${hours.padStart(2, '0')}:${minutes.padEnd(2, '0')}`;
-    const i = xLabels.indexOf(formattedTime);
-    if (i !== -1) {
-      mappedData[i] = { x: formattedTime, y: yProcessData(yData[index]) };
+    // Ensure the time is valid before splitting and formatting
+    if (time) {
+      const [hours, minutes] = time.split('.');
+  
+      // Check if hours and minutes are valid
+      if (hours !== undefined && minutes !== undefined) {
+        const formattedTime = `${hours.padStart(2, '0')}:${minutes.padEnd(2, '0')}`;
+        const i = xLabels.indexOf(formattedTime);
+  
+        if (i !== -1) {
+          mappedData[i] = { x: formattedTime, y: yProcessData(yData[index]) };
+        }
+      } else {
+        console.error(`Invalid time format in xData: ${time}`);
+      }
+    } else {
+      console.error(`Null or undefined time value in xData at index ${index}`);
     }
   });
-
+  
   // Fill gaps with the previous non-null value or a default value if all previous are null
   for (let i = 1; i < mappedData.length; i++) {
     if (mappedData[i] === null) {
@@ -186,46 +215,6 @@ function Chart({ processedData, params = null, oData, data }) {
       }
     });
   }
-
-  // Adjustment for 15-minute interval
-  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
-
-  const timeToMinutes = (time) => {
-    const [hours, mins] = time.split(":").map(Number);
-    return hours * 60 + mins;
-  };
-
-  const minutesToTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
-  };
-
-  const adjustData = (data) => {
-    let previousEndTime = 0;
-    const MAX_TIME = 23 * 60 + 45; // Maximum allowed time (23:45)
-
-    return data.map((item) => {
-      let { stime, etime } = item;
-      let stimeInMinutes = timeToMinutes(stime);
-      let etimeInMinutes = timeToMinutes(etime);
-
-      stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
-      stimeInMinutes = roundToNearest15(stimeInMinutes);
-      etimeInMinutes = roundToNearest15(etimeInMinutes);
-
-      // Ensure end time is not greater than 23:45
-      etimeInMinutes = Math.min(Math.max(etimeInMinutes, stimeInMinutes + 15), MAX_TIME);
-
-      previousEndTime = etimeInMinutes;
-      return {
-        ...item,
-        stime: minutesToTime(stimeInMinutes),
-        etime: minutesToTime(etimeInMinutes),
-      };
-    });
-  };
-  // Adjustment END for 15-minute interval
 
   const adjustedOvertimeRanges = adjustData(overtimeRanges);
   console.log('Final adjustedOvertimeRanges:', JSON.stringify(adjustedOvertimeRanges, null, 2));
@@ -399,7 +388,7 @@ function Chart({ processedData, params = null, oData, data }) {
                             height: '10%',
                             borderLeft: '1px solid grey',
                             borderBottom: matchingTruck && rowIndex === 3 ?
-                            `2px solid ${matchingTruck.color}` :
+                            `4px solid ${matchingTruck.color}` :
                             '1px solid grey'
                           }}
                           ></div>
@@ -413,7 +402,7 @@ function Chart({ processedData, params = null, oData, data }) {
                             height: '15%',
                             borderLeft: '1px solid grey',
                             borderBottom: matchingTruck && rowIndex === 3 ?
-                            `2px solid ${matchingTruck.color}` :
+                            `4px solid ${matchingTruck.color}` :
                             '1px solid grey'
                           }}
                           ></div>
@@ -427,7 +416,7 @@ function Chart({ processedData, params = null, oData, data }) {
                             height: '10%',
                             borderLeft: '1px solid grey',
                             borderBottom: matchingTruck && rowIndex === 3 ?
-                            `2px solid ${matchingTruck.color}` :
+                            `4px solid ${matchingTruck.color}` :
                             '1px solid grey'
                           }}
                           ></div>
@@ -441,7 +430,7 @@ function Chart({ processedData, params = null, oData, data }) {
                             height: '100%',
                             borderLeft: '1px solid lightgrey',
                             borderBottom: matchingTruck && rowIndex === 3 ?
-                            `2px solid ${matchingTruck.color}` :
+                            `4px solid ${matchingTruck.color}` :
                             '1px solid grey'
                           }}
                           ></div>
@@ -455,7 +444,7 @@ function Chart({ processedData, params = null, oData, data }) {
                             height: '100%',
                             borderRight: '1px solid lightgrey',
                             borderBottom: matchingTruck && rowIndex === 3 ?
-                            `2px solid ${matchingTruck.color}` :
+                            `4px solid ${matchingTruck.color}` :
                             '1px solid grey'
                           }}
                           ></div>
@@ -497,6 +486,73 @@ function yProcessData(data) {
   };
   return valueMap[data] !== undefined ? valueMap[data] : null;
 }
+  // Adjustment for 15-minute interval
+  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
+  // Function to convert and round time to nearest 15-minute interval
+  const adjustxData = (times) => {
+  return times.map(time => {
+    // Check if time is valid before splitting
+    if (!time) {
+      console.error("Invalid time value:", time);
+      return ""; // Return an empty string or some default value if time is invalid
+    }
+    
+    // Split hours and minutes
+    let [hours, mins] = time.split(":").map(Number);
+
+    // Convert to total minutes
+    let totalMinutes = hours * 60 + mins;
+
+    // Round to nearest 15 minutes (or adjust as needed)
+    totalMinutes = Math.round(totalMinutes / 15) * 15;
+
+    // Convert back to hours and minutes
+    hours = Math.floor(totalMinutes / 60);
+    mins = totalMinutes % 60;
+
+    // Return formatted time with '.' instead of ':'
+    return `${hours}.${String(mins).padStart(2, '0')}`;
+  });
+};
+
+  const timeToMinutes = (time) => {
+    const [hours, mins] = time.split(":").map(Number);
+    return hours * 60 + mins;
+  };
+
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
+
+  const adjustData = (data) => {
+    let previousEndTime = 0;
+    const MAX_TIME = 23 * 60 + 45; // Maximum allowed time (23:45)
+
+    return data.map((item) => {
+      let { stime, etime } = item;
+      let stimeInMinutes = timeToMinutes(stime);
+      let etimeInMinutes = timeToMinutes(etime);
+
+      stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
+      stimeInMinutes = roundToNearest15(stimeInMinutes);
+      etimeInMinutes = roundToNearest15(etimeInMinutes);
+
+      // Ensure end time is not greater than 23:45
+      etimeInMinutes = Math.min(Math.max(etimeInMinutes, stimeInMinutes + 15), MAX_TIME);
+
+      previousEndTime = etimeInMinutes;
+      return {
+        ...item,
+        stime: minutesToTime(stimeInMinutes),
+        etime: minutesToTime(etimeInMinutes),
+      };
+    });
+  };
+  // Adjustment END for 15-minute interval
+
+  //colorline function
 function timeToColumn(time) {
   if (!time || typeof time !== 'string') {
     throw new Error(`Invalid time format: ${time}`);
