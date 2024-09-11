@@ -7,26 +7,28 @@ import GraphChart from 'react-apexcharts';
 // // Load the ApexCharts library dynamically to avoid server-side rendering issues
 const LineChart = dynamic(() => import('react-apexcharts'), { ssr: false, loading: () => <p>Loading...</p> });
 
-function Chart({ processedData, params = null }) {
+function Chart({ processedData, params = null , oData}) {
   // Generate xData as cumulative sum of totalTime
   // const xLabels = Array.from({ length: 1440 }, (_, i) => {
   //   const hours = String(Math.floor(i / 60)).padStart(2, '0');
   //   const minutes = String(i % 60).padStart(2, '0');
   //   return `${hours}:${minutes}`;
   // });
+  console.log('Chart  oData', JSON.stringify(oData, null, 2));
 
     const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
     const hours = String(Math.floor(i * 15 / 60)).padStart(2, '0');
     const minutes = String(i * 15 % 60).padStart(2, '0');
     return `${hours}:${minutes}`;
    });
+   //console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
 
 
   const xAxis = [];
   let cumulativeHours = 0;
   let cumulativeMinutes = 0;
 
-  processedData.forEach(point => {
+   oData.forEach(point => {
     const [hours, minutes, seconds] = point.totalTime.split('.').map(Number);
 
     cumulativeHours += hours;
@@ -38,8 +40,8 @@ function Chart({ processedData, params = null }) {
     }
 
     const formattedTime = `${cumulativeHours}.${cumulativeMinutes.toString().padStart(2, '0')}`;
-    xAxis.push(formattedTime);
-  });
+      xAxis.push(formattedTime);
+    });
   const yAxis = processedData.map(point => point.status);
 
   //final data sent to graph
@@ -51,8 +53,8 @@ function Chart({ processedData, params = null }) {
   //Ystatus....4,3,1,2,1XDATA-------0.00,0.18,0.18,0.47,2.14,17.29
 
   //testing data 
-  // const xData = ['0.00','0.18','0.18','0.47','2.14','17.29'];
-  // const yData = ['4','3','1','2','1'];
+  const xSeriesData = ['0.18','0.18','0.47','2.14','17.29'];
+  const ySeriesData = ['4','3','1','2','1'];
   // console.log('Ystatus....' + yData + 'XDATA-------' + xData);
 
 
@@ -180,6 +182,21 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
     });
   };
 
+//   const overtimeRanges = datas && datas['Shift_data']
+//     ? datas['Shift_data'].map((shift) => ({
+//       start: formatTime(shift['violation_startTime']),
+//       end: formatTime(shift['violation_endTime']),
+//     }))
+//     : [];
+
+//   const sda = [
+//     { start: '02:00', end: '07:00' },
+//     { start: '09:00', end: '09:50' },
+//     { start: '11:00', end: '14:10' }
+//   ];
+
+//   console.log('overtime', overtimeRanges, sda);
+
   const specificKeys = ['Shift_data', 'cycle_data', 'eight_hour_break_violation', 'driver_eleven_viol_data'];
   let overtimeRanges = [];
 
@@ -190,13 +207,57 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       }
     });
   }
+  overtimeRanges =[
+    {
+      "stime": "20:53",
+      "etime": "23:43"
+    }
+  ];
 
-  overtimeRanges.push({ start: '00:00', end: '00:00' });
+  //Adjustment for 15 minutes interval
+  const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
+
+  const timeToMinutes = (time) => {
+    if (time === "20:00") return 24 * 60; // Handle the end case
+    const [hours, mins] = time.split(":").map(Number);
+    return hours * 60 + mins;
+  };
+
+  const minutesToTime = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  };
+  const adjustData = (data) => {
+    let previousEndTime = 0;
+    return data.map((item, index) => {
+      let { stime, etime } = item;
+      let stimeInMinutes = timeToMinutes(stime);
+      let etimeInMinutes = timeToMinutes(etime);
+
+      stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
+
+      stimeInMinutes = roundToNearest15(stimeInMinutes);
+      etimeInMinutes = roundToNearest15(etimeInMinutes);
+
+      etimeInMinutes = Math.max(etimeInMinutes, stimeInMinutes + 15);
+
+      previousEndTime = etimeInMinutes;
+
+      return {
+        ...item,
+        stime: minutesToTime(stimeInMinutes),
+        etime: minutesToTime(etimeInMinutes),
+      };
+    });
+  };
+  overtimeRanges = adjustData(overtimeRanges);
+  //overtimeRanges.push({ start: '00:00', end: '00:00' });
   console.log('Final overtimeRanges:', JSON.stringify(overtimeRanges, null, 2));
 
   const xAnnotations = overtimeRanges.map(range => ({
-    x: range.start,
-    x2: range.end,
+    x: range.stime,
+    x2: range.etime,
     fillColor: '#FF4560',
     opacity: 0.3,
     borderColor: '#FF4560',
@@ -224,7 +285,7 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
 
   const series = [
     {
-      name: '',
+      name: 'Info',
       data: mappedData.map(d => d.y),
     },
   ];
@@ -241,9 +302,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       curve: 'stepline',
       lineCap: 'butt',
       dashArray: 0,
-      colors: ['#000000'], // Set the stroke color to black
+      colors: ['#000000'], 
     },
-    colors: ['#000000'], // Set the line color to black
+    colors: ['#000000'], 
     xaxis: {
       categories: xLabels || [],
       tickAmount: 23,
@@ -301,6 +362,34 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
         opacity: anno.opacity,
       })),
     },
+    tooltip: {
+      enabled: false,
+      x: {
+          show: false,
+      },
+      y: {
+          formatter: (value, { seriesIndex, dataPointIndex, w }) => {
+              const xValue = xSeriesData[dataPointIndex] || "";
+              const yValue = ySeriesData[dataPointIndex] || "";
+              return `Time: ${xValue}, Status: ${yValue}`;
+          }
+      }
+    }
+  //   tooltip: {
+  //   enabled: true,
+  //   x: {
+  //       show: true,
+  //   },
+  //   y: {
+  //       formatter: (value, { seriesIndex, dataPointIndex, w }) => {
+  //           // Static values to display alongside actual data
+  //           // const staticValues = ySeriesData;
+  //           // const staticValue = staticValues[dataPointIndex];
+  //           return `Value: ${xSeriesData}, Static: ${ySeriesData}`;
+  //       }
+  //     }
+  // }
+    
   };
 
   return (

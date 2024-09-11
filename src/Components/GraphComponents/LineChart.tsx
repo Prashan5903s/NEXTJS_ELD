@@ -410,28 +410,6 @@ function LineChart(params = null) {
 
     // Determine truckDetails based on slug
     const truckDetails = mappedData ? mappedData.find((data) => data[convertToSlug(item[5])]) : [];
-
-    // Calculate the time difference
-    // const calculateTimeDifference = (startTime, endTime) => {
-    //   const timeToMinutes = (time) => {
-    //     const [hours, minutes] = time.split(':').map(Number);
-    //     return hours * 60 + minutes;
-    //   };
-    //   const minutesToTime = (minutes) => {
-    //     const hours = Math.floor(minutes / 60);
-    //     const mins = minutes % 60;
-    //     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-    //   };
-
-    //   const startMinutes = timeToMinutes(startTime);
-    //   const endMinutes = timeToMinutes(endTime);
-    //   const differenceMinutes = endMinutes - startMinutes;
-    //   return minutesToTime(differenceMinutes);
-    // };
-
-    // // Time difference calculation
-    // const timeSl = calculateTimeDifference(item[3], item[4]);
-
     // Return the object with the computed status
     return {
       status: mapI,
@@ -444,6 +422,8 @@ function LineChart(params = null) {
 
   // data.push({ status: null, stime: '00:00', etime: '00:00', time: '', truckDetails: null });
 
+
+  //Adjustment for 15 minutes interval
   console.log('Pushed Data', JSON.stringify(data, null, 2));
   const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
 
@@ -458,8 +438,9 @@ function LineChart(params = null) {
     const mins = minutes % 60;
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
   };
-  let raw_data = data;
-  console.log('Raw Data', JSON.stringify(raw_data, null, 2));
+  
+  //let raw_data = data;
+  // console.log('Raw Data', JSON.stringify(raw_data, null, 2));
 
   const adjustData = (data) => {
     let previousEndTime = 0;
@@ -484,37 +465,20 @@ function LineChart(params = null) {
       };
     });
   };
-  data = adjustData(raw_data);
-  
-  const truckDetails1 = [{ color: 'purple', text: '302' }];
-  const truckDetails2 = [{ color: 'red', text: '303' }];
-  const truckDetails3 = [{ color: 'green', text: '304' }];
+  let optimisedData = adjustData(data);
+  console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
 
-  // // Complete data
-  const rawdata = [
-    { status: 2, stime: '0:00', etime: '0:12', time: '', truckDetails: truckDetails2 },
-    { status: 3, stime: '1:12', etime: '1:20', time: '', truckDetails: truckDetails2 },
-    { status: 1, stime: '1:20', etime: '3:30', time: '', truckDetails: truckDetails2 },
-    { status: 2, stime: '3:30', etime: '3:45', time: '', truckDetails: truckDetails2 },
-    { status: 4, stime: '3:45', etime: '5:30', time: '', truckDetails: truckDetails2 },
-    { status: 1, stime: '5:30', etime: '6:30', time: '', truckDetails: truckDetails2 },
-    { status: 2, stime: '6:30', etime: '7:00', time: '', truckDetails: truckDetails2 },
-    { status: 3, stime: '7:00', etime: '15:00', time: '', truckDetails: truckDetails2 },
-    { status: 4, stime: '15:00', etime: '16:00', time: '', truckDetails: truckDetails2 },
-    { status: 3, stime: '16:00', etime: '17:00', time: '', truckDetails: truckDetails2 },
-    { status: 4, stime: '17:00', etime: '18:00', time: '', truckDetails: truckDetails2 },
-    { status: 1, stime: '18:00', etime: '20:00', time: '', truckDetails: truckDetails2 },
-    { status: null, stime: '20:00', etime: '20:00', time: '', truckDetails: truckDetails2 },
-  ];
- 
-  // data.push(rdata);
-   // data.push({ status: 0, stime: '00:00', etime: '00:00', time: '0:00', truckDetails: null });
+  optimisedData.forEach((entry) => {
+    entry.time = calculateTimeDifference(entry.stime, entry.etime);
+  });
+  optimisedData = processedOData(optimisedData);
 
-  //console.log('Static Data', JSON.stringify(rawdata, null, 2));
+    //Adjustment END for 15 minutes interval
 
   data.forEach((entry) => {
     entry.time = calculateTimeDifference(entry.stime, entry.etime);
   });
+
   const filteredData = data.filter(item => item.status === 1 || item.status === 2);
 
   const colorLineData = [];
@@ -578,8 +542,6 @@ function LineChart(params = null) {
     setIsExpanded(!isExpanded);
   };
 
-
-
   //calling data transformation methods
   const processedData = processedRawData(data, transformedData, colorLineData);
 
@@ -622,7 +584,7 @@ function LineChart(params = null) {
           <GraphLabels />
           {/* <Chart processedData={processedData} /> */}
           <Suspense fallback={<div>Loading Chart...</div>}>
-            <LazyChart processedData={processedData} params={params} />
+            <LazyChart processedData={processedData} params={params}  oData = {optimisedData} />
           </Suspense>
           <TimeFields timeMap={timeMap} />
         </div>
@@ -667,6 +629,19 @@ const processedRawData = (data, transformedData, colorLineData) => {
     const colorLine = [];
     colorLine.push(colorLineData);
     result.push({ totalTime, status, singleTruckDetails, truckDetails, colorLineData });
+  });
+  return result;
+};
+const processedOData = (data) => {
+  const result = [];
+  data.forEach(item => {
+    const status = item.status;
+    const timeParts = item.time.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10).toFixed(2);
+    const totalTime = hours + '.' + minutes;
+    parseFloat(totalTime).toFixed(2);
+    result.push({ totalTime, status });
   });
   return result;
 };
