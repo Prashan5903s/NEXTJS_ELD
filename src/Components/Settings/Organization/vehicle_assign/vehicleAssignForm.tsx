@@ -8,6 +8,8 @@ import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import LoadingIcons from 'react-loading-icons';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 
 type IFormInput = {
     driver_id: number;
@@ -18,6 +20,7 @@ type IFormInput = {
 function VehicleAssignForm({ id }) {
     const router = useRouter();
     const [vehicleAssign, setVehicleAssign] = useState(null);
+    const [isDataLoading, setIsDataLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [editVehicleAssign, setEditVehicleAssign] = useState(null);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
@@ -61,61 +64,6 @@ function VehicleAssignForm({ id }) {
         positionClass: "toast-top-right",
         timeOut: "5000",
     };
-
-    // const addvehicleAssign = async (data) => {
-    //     setIsLoading(true);
-    //     try {
-    //         const response = await fetch(`${url}/setting/driver/vehicleAssigns`, {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //             body: JSON.stringify(data),
-    //         });
-
-    //         if (!response.ok) {
-    //             setIsLoading(false);
-    //             const errorData = await response.json();
-    //             toastr["error"]("Error adding driver: " + errorData.message);
-    //         } else {
-    //             setIsLoading(false);
-    //             toastr["success"]("vehicleAssign added successfully!");
-    //             router.push("/settings/organization/vehicle-assign");
-    //         }
-    //     } catch (error) {
-    //         setIsLoading(false);
-    //         toastr["error"]("Error adding driver: " + error.message);
-    //     }
-    // };
-
-
-    // const editvehicleAssign = async (id, data) => {
-    //     setIsLoading(true);
-    //     try {
-    //         const response = await fetch(`${url}/settings/vehicle/assign/${id}`, {
-    //             method: "PUT",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //             body: JSON.stringify(data),
-    //         });
-
-    //         if (!response.ok) {
-    //             setIsLoading(false);
-    //             const errorData = await response.json();
-    //             toastr["error"]("Error updating driver: " + errorData.message);
-    //         } else {
-    //             setIsLoading(false);
-    //             toastr["success"]("vehicleAssign updated successfully!");
-    //             router.push("/settings/organization/vehicle-assign");
-    //         }
-    //     } catch (error) {
-    //         setIsLoading(false);
-    //         toastr["error"]("Error updating driver: " + error.message);
-    //     }
-    // };
 
     const fetchEditVehicleAssign = useCallback(debounce(async () => {
         if (!id) return;
@@ -185,6 +133,18 @@ function VehicleAssignForm({ id }) {
             setValue("is_active", editVehicleAssign?.vehicleAssign?.is_active?.toString() || "");
         }
     }, [editVehicleAssign, setValue]);
+
+    useEffect(() => {
+        if (id) {
+            if (editVehicleAssign && vehicleAssign) {
+                setIsDataLoading(true);
+            }
+        } else {
+            if (vehicleAssign) {
+                setIsDataLoading(true);
+            }
+        }
+    }, [id, editVehicleAssign, vehicleAssign]);
 
     // const onSubmit = async (data) => {
     //     if (id) {
@@ -265,6 +225,116 @@ function VehicleAssignForm({ id }) {
     const onSubmit = async (data) => {
         handleSubmits(data);
     };
+
+    if (!isDataLoading) {
+        return (
+            <div className="d-flex flex-column flex-column-fluid">
+                <div id="kt_app_toolbar" className="app-toolbar pt-6 pb-2 mb-5">
+                    <div
+                        id="kt_app_toolbar_container"
+                        className="app-container container-fluid d-flex align-items-stretch"
+                    >
+                        <div className="app-toolbar-wrapper d-flex flex-stack flex-wrap gap-4 w-100">
+                            <div className="page-title d-flex flex-column justify-content-center gap-1 me-3">
+                                <h1 className="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
+                                    <Skeleton width={15} />
+                                </h1>
+                                <ul className="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0">
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={12} />
+                                        </Link>
+                                    </li>
+                                    <li className="breadcrumb-item">
+                                        <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                                    </li>
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={15} />
+                                        </Link>
+                                    </li>
+                                    <li className="breadcrumb-item">
+                                        <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                                    </li>
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={15} />
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="kt_app_content" className="app-content flex-column-fluid">
+                    <div
+                        id="kt_app_content_container"
+                        className="app-container container-fluid"
+                    >
+                        <form
+                            className="form d-flex flex-column"
+                            onSubmit={handleSubmit(onSubmit)}
+                            id="form"
+                        >
+                            <input type="hidden" />
+
+                            <div className="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+                                <div className="tab-content">
+                                    <div
+                                        className="tab-pane fade show active"
+                                        id="kt_ecommerce_add_product_general"
+                                        role="tabpanel"
+                                    >
+                                        <div className="d-flex flex-column">
+                                            <div className="card overflow-visible card-flush py-4">
+                                                <div className="text-center">
+                                                    <p className="fw-bolder fs-7"><Skeleton width={120} /></p>
+                                                </div>
+                                                <div className="separator my-0"></div>
+                                                <div className="card-body mt-4">
+                                                    <>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Driver
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={680} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Vehicle
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={680} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Status
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={680} />
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="d-flex justify-content-center">
+                                    <Skeleton width={100} />
+                                    <Skeleton width={100} />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="d-flex flex-column flex-column-fluid">

@@ -2,11 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
-<<<<<<< HEAD
 const ToggleSwitch = ({ status, vehicleId, updateVehiclesList }) => {
-=======
-const ToggleSwitch = ({status, vehicleId, updateVehiclesList}) => {
->>>>>>> origin/main
 
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 

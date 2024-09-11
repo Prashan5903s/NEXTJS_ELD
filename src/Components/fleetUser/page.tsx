@@ -12,7 +12,8 @@ import { Value } from "sass";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import LoadingIcons from 'react-loading-icons';
-// import '../styles/globals.css'; // Your global styles
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 
 type IFormInput = {
   first_name: number;
@@ -34,6 +35,7 @@ function FleetUserForm({ id = null }) {
   const [homeTerminal, setHomeTerminal] = useState(null);
   const [edits, setEdits] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
   const [adv, setAdv] = useState(0);
   const [userName, setUserName] = useState(null);
   const [authenticated, setAuthenticated] = useState(false);
@@ -193,50 +195,6 @@ function FleetUserForm({ id = null }) {
     getValues,
   } = useForm<IFormInput>();
 
-  useEffect(() => {
-    function getCookie(name) {
-      const nameEQ = name + "=";
-      const ca = document.cookie.split(";");
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        ``;
-        while (c.charAt(0) === " ") c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0)
-          return c.substring(nameEQ.length, c.length);
-      }
-      return null;
-    }
-
-    const token = getCookie("token");
-
-    if (token) {
-      axios
-        .get(`${url}/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then(async (response) => {
-          setAuthenticated(true);
-          const userType = response.data.user_type;
-
-          if (userType === "TR") {
-          } else if (userType === "EC") {
-            router.replace("/company/dashboard");
-          } else {
-            console.error("Invalid user type");
-            router.replace("/");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user data:", error);
-          router.replace("/");
-        });
-    } else {
-      router.replace("/");
-    }
-  }, [id, router, reset]);
-
   function getCookie(name) {
     const nameEQ = name + "=";
 
@@ -263,44 +221,41 @@ function FleetUserForm({ id = null }) {
 
   const Edit = async () => {
     try {
-      const response = await axios.get(
-        `${url}/fleet-user/${id}/edit`,
-        axiosConfig
-      );
-      const data = response.data;
-      setEdits(data);
+      const response = await axios.get(`${url}/fleet-user/${id}/edit`, axiosConfig);
+      setEdits(response.data);
     } catch (error) {
       console.error("Error fetching driver data:", error);
     }
   };
 
   const debouncedEdit = useCallback(
-    debounce(Edit, 300), // Adjust the delay (300ms here) as needed
-    [url, id]
+    debounce(Edit, 2000), // Adjust the delay as needed
+    [id, url] // Add 'id' and 'url' to dependencies
   );
 
   useEffect(() => {
-    debouncedEdit();
-    // Cleanup to cancel debounce on component unmount
-    return () => {
-      debouncedEdit.cancel();
-    };
-  }, [debouncedEdit]);
+    if (id && url) {
+      debouncedEdit();
+    }
+  }, [debouncedEdit, id, url]);
 
   const Address = async () => {
     try {
       const response = await axios.get(`${url}/fleet-user/create`, axiosConfig);
       setRole(response.data);
     } catch (error) {
-      console.error("Error fetching driver data:", error);
+      console.error("Error fetching role data:", error);
     }
   };
 
-  const debouncedAddress = useCallback(debounce(Address, 300), [url]);
+  const debouncedAddress = useCallback(
+    debounce(Address, 1000), // Adjust the delay as needed
+    [url] // Add 'url' to dependencies
+  );
 
   useEffect(() => {
     debouncedAddress();
-  }, [url, debouncedAddress]);
+  }, [debouncedAddress, url]);
 
   toastr.options = {
     closeButton: true,
@@ -412,7 +367,7 @@ function FleetUserForm({ id = null }) {
     } else {
       await addDriver(data);
     }
-  }, 300); // 300ms debounce delay, adjust as needed
+  }, 1000); // 300ms debounce delay, adjust as needed
 
   // Update the onSubmit function to use the debounced version
   const onSubmit = (data) => {
@@ -420,6 +375,162 @@ function FleetUserForm({ id = null }) {
   };
 
   const selectRef = useRef(null);
+
+  useEffect(() => {
+    if (id) {
+      if (role && edits) {
+        setIsDataLoading(true);
+      }
+    } else {
+      if (role) {
+        setIsDataLoading(true);
+      }
+    }
+  }, [id, role, edits])
+
+  if (!isDataLoading) {
+    return (
+      <div className="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_toolbar" className="app-toolbar pt-6 pb-2 mb-5">
+          <div
+            id="kt_app_toolbar_container"
+            className="app-container container-fluid d-flex align-items-stretch"
+          >
+            <div className="app-toolbar-wrapper d-flex flex-stack flex-wrap gap-4 w-100">
+              <div className="page-title d-flex flex-column justify-content-center gap-1 me-3">
+                <h1 className="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
+                  <Skeleton width={180} />
+                </h1>
+
+                <ul className="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0">
+                  <li className="breadcrumb-item text-muted">
+                    <Link href="#" className="text-muted text-hover-primary">
+                      <Skeleton width={60} />
+                    </Link>
+                  </li>
+                  <li className="breadcrumb-item">
+                    <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                  </li>
+                  <li className="breadcrumb-item text-muted">
+                    <Skeleton width={60} />
+                  </li>
+                  <li className="breadcrumb-item">
+                    <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                  </li>
+                  <li className="breadcrumb-item text-muted">
+                    <Skeleton width={60} />
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="kt_app_content" className="app-content flex-column-fluid">
+          <div
+            id="kt_app_content_container"
+            className="app-container container-fluid"
+          >
+            <form
+              className="form d-flex flex-column"
+              onSubmit={handleSubmit(onSubmit)}
+              id="form"
+            >
+              <input type="hidden" />
+
+              <div className="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+                <div className="tab-content">
+                  <div
+                    className="tab-pane fade show active"
+                    id="kt_ecommerce_add_product_general"
+                    role="tabpanel"
+                  >
+                    <div className="d-flex flex-column">
+                      <div className="card card-flush py-4">
+                        <div className="text-center">
+                          <p className="fw-bolder fs-7"><Skeleton width={150} /></p>
+                        </div>
+                        <div className="separator my-0"></div>
+                        <div className="card-body mt-4">
+                          <div className="mb-5 row">
+                            <label className="required form-label  col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Name
+                            </label>
+                            <div className="col-lg-5 col-md-12 col-sm-12">
+                              <Skeleton width={330} />
+                            </div>
+                            <div className="col-lg-5 col-md-12 col-sm-12">
+                              <Skeleton width={330} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              User Id
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Mobile no
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Email
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                          {!id && (
+                            <div className="mb-5 row">
+                              <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                Password
+                              </label>
+
+                              <div className="col-lg-5 col-md-12 col-sm-5">
+                                <div className="position-relative">
+                                  <Skeleton width={660} />
+                                </div>
+                              </div>
+
+                              <div className="col-lg-5 col-md-12 col-sm-5">
+                                <div className="position-relative">
+                                  <Skeleton width={660} />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mb-5 row">
+                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                              Role
+                            </label>
+                            <div className="col-lg-10 col-md-12 col-sm-12">
+                              <Skeleton width={660} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <Skeleton width={100} />
+                  <Skeleton width={100} />
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex flex-column flex-column-fluid">

@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import VehicleTable from './vehicles/page'
+import VehicleTable from "./vehicles/page";
 import { DashboardProvider } from '@/context/DashboardContext'
 import { useRouter } from "next/navigation";
 import axios from "axios";

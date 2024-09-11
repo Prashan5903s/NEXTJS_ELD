@@ -8,6 +8,8 @@ import { useForm, Controller } from "react-hook-form";
 import toastr from "toastr";
 import "toastr/build/toastr.min.css";
 import LoadingIcons from 'react-loading-icons';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 
 type IFormInput = {
     hardware: number;
@@ -25,6 +27,7 @@ function DeviceForm({ id }) {
     const [device, setDevice] = useState(null);
     const [editDevice, setEditdevice] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
     const [selectedDriverStatus, setSelectedDriverStatus] = useState<number | null>(null);
     const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
     const token = getCookie("token");
@@ -206,7 +209,7 @@ function DeviceForm({ id }) {
                 setIsLoading(false);
                 toastr["error"]("Error adding driver: " + error.message);
             }
-        }, 300), // Adjust debounce delay as needed
+        }, 1000), // Adjust debounce delay as needed
         [url, token, router]
     );
 
@@ -236,7 +239,7 @@ function DeviceForm({ id }) {
                 setIsLoading(false);
                 toastr["error"]("Error updating driver: " + error.message);
             }
-        }, 300), // Adjust debounce delay as needed
+        }, 1000), // Adjust debounce delay as needed
         [url, token, router]
     );
 
@@ -247,6 +250,166 @@ function DeviceForm({ id }) {
             await debouncedAddDevice(data);
         }
     };
+
+    useEffect(() => {
+        if (id) {
+
+            if (editDevice && device) {
+                setIsDataLoading(true);
+            }
+
+        } else {
+
+            if (device) {
+                setIsDataLoading(true);
+            }
+
+        }
+    }, [id, device, editDevice])
+
+    if (!isDataLoading) {
+        return (
+            <div className="d-flex flex-column flex-column-fluid">
+                <div id="kt_app_toolbar" className="app-toolbar pt-6 pb-2 mb-5">
+                    <div
+                        id="kt_app_toolbar_container"
+                        className="app-container container-fluid d-flex align-items-stretch"
+                    >
+                        <div className="app-toolbar-wrapper d-flex flex-stack flex-wrap gap-4 w-100">
+                            <div className="page-title d-flex flex-column justify-content-center gap-1 me-3">
+                                <h1 className="page-heading d-flex flex-column justify-content-center text-gray-900 fw-bold fs-3 m-0">
+                                    <Skeleton width={180} />
+                                </h1>
+                                <ul className="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0">
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={60} />
+                                        </Link>
+                                    </li>
+                                    <li className="breadcrumb-item">
+                                        <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                                    </li>
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={60} />
+                                        </Link>
+                                    </li>
+                                    <li className="breadcrumb-item">
+                                        <span className="bullet bg-gray-500 w-5px h-2px"></span>
+                                    </li>
+                                    <li className="breadcrumb-item text-muted">
+                                        <Link href="#" className="text-muted text-hover-primary">
+                                            <Skeleton width={60} />
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="kt_app_content" className="app-content flex-column-fluid">
+                    <div
+                        id="kt_app_content_container"
+                        className="app-container container-fluid"
+                    >
+                        <form
+                            className="form d-flex flex-column"
+                            onSubmit={handleSubmit(onSubmit)}
+                            id="form"
+                        >
+                            <input type="hidden" />
+
+                            <div className="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
+                                <div className="tab-content">
+                                    <div
+                                        className="tab-pane fade show active"
+                                        id="kt_ecommerce_add_product_general"
+                                        role="tabpanel"
+                                    >
+                                        <div className="d-flex flex-column">
+                                            <div className="card card-flush py-4">
+                                                <div className="text-center">
+                                                    <p className="fw-bolder fs-7"><Skeleton width={180} /></p>
+                                                </div>
+                                                <div className="separator my-0"></div>
+                                                <div className="card-body mt-4">
+
+                                                    <>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Hardware
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Device type
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Serial Number
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Gateway Serial
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Gateway
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Vehicle
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                        <div className="mb-5 row">
+                                                            <label className="required col-lg-2 col-md-12 col-sm-12 col-form-label">
+                                                                Status
+                                                            </label>
+                                                            <div className="col-lg-10 col-md-12 col-sm-12">
+                                                                <Skeleton width={660} />
+                                                            </div>
+                                                        </div>
+                                                    </>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="d-flex justify-content-center">
+                                    <Skeleton width={100} />
+                                    <Skeleton width={100} />
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="d-flex flex-column flex-column-fluid">

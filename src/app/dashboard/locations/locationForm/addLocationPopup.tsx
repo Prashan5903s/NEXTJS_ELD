@@ -1,8 +1,10 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import LoadingIcons from 'react-loading-icons';
+import Skeleton from 'react-loading-skeleton'; // Import Skeleton
+import 'react-loading-skeleton/dist/skeleton.css'; // Import Skeleton CSS
 
 const formValidations = {
   name: {
@@ -69,6 +71,7 @@ const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [editData, setEditData] = useState();
   const [loctn, setLoctn] = useState({});
+  const [isDataLoading, setIsDataLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
@@ -119,8 +122,9 @@ const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
       console.error("No token available");
       return;
     }
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
 
       const apiUrl = id ? `${url}/asset/location/${id}` : `${url}/asset/location`;
       const method = id ? "put" : "post";
@@ -135,13 +139,16 @@ const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
       });
 
       if (response.status === 200) {
+        setIsLoading(false);
         updatedLocationData(); // Refresh the location list
         close(false); // Close the modal
         router.push("/dashboard/locations"); // Redirect
       } else {
+        setIsLoading(false);
         console.error("Failed to save/update:", response.data);
       }
     } catch (error) {
+      setIsLoading(false);
       console.error("API error:", error.response?.data || error.message);
     } finally {
       setIsLoading(false);
@@ -157,63 +164,33 @@ const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
     }
   };
 
-  useEffect(() => {
+  const fetchData = useCallback(debounce(async () => {
     const token = getCookie("token");
 
-    if (token) {
-      axios
-        .get(`${url}/user`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setAuthenticated(true);
-          if (response.data.user_type === "TR") {
-            // handle TR user
-          } else if (response.data.user_type === "EC") {
-            router.replace("/company/dashboard");
-          } else {
-            console.error("Invalid user type");
-            router.replace("/");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user data:", error);
-          router.replace("/");
-        });
-    } else {
-      router.replace("/");
+    if (!token) {
+      console.error("No token available");
+      return;
     }
-  }, [router, url]);
+
+    try {
+      const response = await axios.get(`${url}/asset/location`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setLoctn(response?.data || {});
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, 1000), [url]);
 
   useEffect(() => {
-    async function fetchData() {
-      const token = getCookie("token");
-
-      if (!token) {
-        console.error("No token available");
-        return;
-      }
-
-      try {
-        const response = await axios.get(`${url}/asset/location`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        setLoctn(response?.data || {});
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
-
     fetchData();
-  }, [url]);
+  }, [fetchData]);
 
-  useEffect(() => {
-    async function fetchEditData() {
+  const fetchEditData = useCallback(
+    debounce(async () => {
       if (!id) return; // Only fetch if `id` exists
       const token = getCookie("token");
 
@@ -244,10 +221,101 @@ const AddLocationModal = ({ id, close, open, updatedLocationData }) => {
       } catch (error) {
         console.error("Error fetching edit data:", error);
       }
-    }
+    }, 1000), // Adjust debounce delay as needed
+    [url, id] // Dependencies for useCallback
+  );
 
+  useEffect(() => {
     fetchEditData();
-  }, [url, id]);
+  }, [url, id])
+
+  useEffect(() => {
+    if (id) {
+      if (editData && locationField && loctn) {
+        setIsDataLoading(true);
+      }
+    }
+  }, [id, editData, locationField, loctn]);
+
+  useEffect(() => {
+    if (!id) {
+      if (Object.keys(loctn).length > 0) {
+        setIsDataLoading(true);
+      }
+    }
+  }, [loctn])
+
+  // skeleton form
+  if (!isDataLoading) {
+    return (
+      <div
+        className={`modal ${open ? "showpopup" : ""}`}
+        style={{ display: open ? "block" : "none" }}
+        aria-modal="true"
+        role="dialog"
+      >
+        <div className="modal-dialog modal-dialog-centered w-95 h-90 mw-650px mh-350px">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2 className="fw-bold"><Skeleton width={180} /></h2>
+              <div
+                className="btn btn-icon btn-sm btn-active-icon-primary"
+                data-bs-dismiss="modal"
+              >
+                <i
+                  onClick={() => close(false)}
+                  className="ki ki-outline ki-cross fs-1"
+                ></i>
+              </div>
+            </div>
+            <div className="modal-body mx-5 mx-xl-15 my-7">
+              <form
+                id="kt_modal_add_vehicle_form"
+                className="form fv-plugins-bootstrap5 fv-plugins-framework"
+                onSubmit={onSubmitChange}
+              >
+                {Object.keys(formValidations).map((field, index) => (
+                  <div className="fv-row mb-7" key={index}>
+                    <label className="fs-6 fw-semibold form-label mb-2">
+                      <span
+                        className={
+                          formValidations[field]?.required ? "required" : ""
+                        }
+                      >
+                        {field.replace(/_/g, " ").toUpperCase()}
+                      </span>
+                    </label>
+
+                    {field === "address" || field === "note" ? (
+                      <Skeleton width={680} height={100} />
+                    ) : field === "address_type" ? (
+                      <div className="d-flex flex-wrap gap-3 mt-3 mb-2">
+                        <Skeleton width={680} />
+                      </div>
+                    ) : (
+                      field === 'name' ? (
+                        <Skeleton width={680} />
+                      ) :
+                        (
+                          <Skeleton width={680} height={100} />
+                        )
+                    )}
+                  </div>
+                ))}
+
+                <div className="form-btn-grp w-100 text-center pt-15">
+                  <div className="form-btn-grp w-100 text-center pt-15">
+                    <Skeleton width={100} />
+                    <Skeleton width={100} />
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

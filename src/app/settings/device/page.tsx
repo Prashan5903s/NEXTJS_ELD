@@ -74,7 +74,7 @@ const ActivityTable = () => {
     };
 
     // Debounced fetch function
-    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 300), [url]);
+    const debouncedFetchUsers = useCallback(debounce(fetchUsers, 2000), [url]);
 
     useEffect(() => {
         debouncedFetchUsers();

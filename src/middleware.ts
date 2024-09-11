@@ -9,6 +9,8 @@ if (!BACKEND_API_URL) {
   );
 }
 
+
+
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const pathname = request.nextUrl.pathname;
@@ -17,6 +19,14 @@ export async function middleware(request: NextRequest) {
   // Check if there are enough segments to extract id
   const id = splittedPathname.length >= 5 ? splittedPathname[4] : undefined;
   const ids = splittedPathname.length >= 4 ? splittedPathname[3] : undefined;
+
+  if (typeof window !== 'undefined') {
+    return null;
+  }
+
+  if (typeof document !== 'undefined') {
+    return null;
+  }
 
   const dlist = ["/dashboard/drivers"];
   const llist = ['/dashboard/locations'];
@@ -91,6 +101,7 @@ export async function middleware(request: NextRequest) {
   if (!token && (isECRequestPage || isTRRequestPage)) {
     return NextResponse.redirect(new URL("/", request.url));
   }
+  
 
   if (token && typeof token === "string") {
     try {

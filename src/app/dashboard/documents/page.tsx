@@ -6,9 +6,6 @@ import AddDocumentModal from "./addForm/AddDocumentPopup";
 import { useRouter } from "next/navigation";
 import { debounce } from 'lodash';
 import { getPermissions } from "@/Components/permission/page";
-import 'datatables.net-dt/css/dataTables.dataTables.min.css';
-import 'datatables.net';
-import $ from 'jquery';
 import dynamic from 'next/dynamic';
 import Skeleton from 'react-loading-skeleton'; // Import Skeleton
 import 'react-loading-skeleton/dist/skeleton.css'; // Import skeleton styles
@@ -111,59 +108,8 @@ const DocumentTable = () => {
     };
 
     useEffect(() => {
-        const token = getCookie("token");
-        if (token) {
-            axios.get(`${url}/user`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((response) => {
-                    setAuthenticated(true);
-                    if (response.data.user_type === "TR") {
-                        // Do something specific for TR users
-                    } else if (response.data.user_type === "EC") {
-                        router.replace("/company/dashboard");
-                    } else {
-                        console.error("Invalid user type");
-                        router.replace("/");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching user data:", error);
-                    router.replace("/");
-                });
-        } else {
-            router.replace("/");
-        }
-
         fetchDocuments();
-    }, [router]);
-
-    useEffect(() => {
-        const initializeDataTable = () => {
-            if ($.fn.DataTable.isDataTable('#vehicleTable')) {
-                $('#vehicleTable').DataTable().destroy(); // Destroy previous instance
-            }
-
-            $('#vehicleTable').DataTable({
-                paging: true,
-                searching: true,
-                destroy: true,
-                initComplete: function () {
-                    $('#vehicleTable_filter').detach().appendTo('.searchBar');
-                }
-            });
-        };
-
-        if (vehicles.length > 0) {
-            initializeDataTable();
-        }
-
-        return () => {
-            if ($.fn.DataTable.isDataTable('#vehicleTable')) {
-                $('#vehicleTable').DataTable().destroy();
-            }
-        };
-    }, [docs]);
+    }, [fetchDocuments])
 
     const updateDocumentList = () => {
         fetchDocuments(); // Refresh the vehicle list
