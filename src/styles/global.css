@@ -14,6 +14,13 @@ a {
   justify-content: center;
   text-decoration: none;
 }
+/* added to remove css overlapping temp */
+.table:not(.table-bordered) tfoot tr:last-child th,
+.table:not(.table-bordered) tfoot tr:last-child td,
+.table:not(.table-bordered) tbody tr:last-child th,
+.table:not(.table-bordered) tbody tr:last-child td {
+  border-bottom: none !important;
+}
 
 .dropdown{
   position: static!important;
@@ -161,7 +168,6 @@ i{
   overflow: hidden;
 }
 
-<<<<<<< HEAD
 
 .dt-layout-table {
   overflow: auto;
@@ -185,12 +191,6 @@ div.dt-container div.dt-layout-full {
   justify-content: end !important;
   align-items: center !important;
 }
-=======
-.table-responsive {
-  overflow: auto;
-}
-
->>>>>>> origin/main
 
 .table .thead,
 .table .tbody {
@@ -552,6 +552,7 @@ text-muted {
 .table-responsive {
   overflow-x: visible !important;
 }
+
 
 @media (min-width: 1024px) {
   .overflow-lg-auto {

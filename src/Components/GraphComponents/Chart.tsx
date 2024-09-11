@@ -3,11 +3,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import styles from '../../styles/chart.module.css';
 import GraphChart from 'react-apexcharts';
+import { bottom } from '@popperjs/core';
 
 // // Load the ApexCharts library dynamically to avoid server-side rendering issues
 const LineChart = dynamic(() => import('react-apexcharts'), { ssr: false, loading: () => <p>Loading...</p> });
 
-function Chart({ processedData, params = null , oData, data}) {
+function Chart({ processedData, params = null, oData, data }) {
 
   let ySeriesData = data.map(point => point.status);
   let xSeriesData = data.map(point => point.time);
@@ -22,19 +23,19 @@ function Chart({ processedData, params = null , oData, data}) {
   //Adjustment for 15 minutes interval
   console.log('Chart  oData', JSON.stringify(data, null, 2));
 
-    const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
+  const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
     const hours = String(Math.floor(i * 15 / 60)).padStart(2, '0');
     const minutes = String(i * 15 % 60).padStart(2, '0');
     return `${hours}:${minutes}`;
-   });
-   //console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
+  });
+  //console.log('optimisedData Data', JSON.stringify(optimisedData, null, 2));
 
 
   const xAxis = [];
   let cumulativeHours = 0;
   let cumulativeMinutes = 0;
 
-   oData.forEach(point => {
+  oData.forEach(point => {
     const [hours, minutes, seconds] = point.totalTime.split('.').map(Number);
 
     cumulativeHours += hours;
@@ -46,8 +47,8 @@ function Chart({ processedData, params = null , oData, data}) {
     }
 
     const formattedTime = `${cumulativeHours}.${cumulativeMinutes.toString().padStart(2, '0')}`;
-      xAxis.push(formattedTime);
-    });
+    xAxis.push(formattedTime);
+  });
   const yAxis = processedData.map(point => point.status);
 
   //final data sent to graph
@@ -55,7 +56,7 @@ function Chart({ processedData, params = null , oData, data}) {
   const yData = [...yAxis];
 
   //prints graph data
-   console.log('Ystatus....' + yData + 'XDATA-------' + xData);
+  console.log('Ystatus....' + yData + 'XDATA-------' + xData);
   //Ystatus....4,3,1,2,1XDATA-------0.00,0.18,0.18,0.47,2.14,17.29
 
   // Map xData to indices in the 15-minute intervals array
@@ -90,52 +91,51 @@ function Chart({ processedData, params = null , oData, data}) {
   filteredData = processedData.map(point => point.colorLineData || []);
   let filteredDatar = filteredData[0] || [];
 
-// console.log('filteredData', JSON.stringify(filteredData, null, 2));
-// console.log('filteredDatarrr', JSON.stringify(filteredDatar, null, 2));
+  // console.log('filteredData', JSON.stringify(filteredData, null, 2));
+  // console.log('filteredDatarrr', JSON.stringify(filteredDatar, null, 2));
 
-const colorLineData = [];
+  const colorLineData = [];
 
-if (Array.isArray(filteredDatar) && filteredDatar.length > 0) {
-  console.log('in colorLine array loop');
-  filteredDatar.forEach(entry => {
-    console.log('in colorLine for loop');
+  if (Array.isArray(filteredDatar) && filteredDatar.length > 0) {
+    console.log('in colorLine array loop');
+    filteredDatar.forEach(entry => {
+      console.log('in colorLine for loop');
 
-    const stime = entry.stime;
-    const etime = entry.etime;
-    const color = entry.color;
-    console.log('colorLineData before processing', JSON.stringify(colorLineData, null, 2));
+      const stime = entry.stime;
+      const etime = entry.etime;
+      const color = entry.color;
+      console.log('colorLineData before processing', JSON.stringify(colorLineData, null, 2));
 
-    if (!stime || !etime || !color) {
-      console.warn(`Skipping invalid entry: ${JSON.stringify(entry)}`);
-      return;
-    }
-
-    const startColumn = timeToColumn(stime);
-    const endColumn = timeToColumn(etime);
-    console.log(`Processing time range: ${stime} to ${etime}, color: ${color}`);
-
-    let colorEntry = colorLineData.find(e => e.color === color);
-    if (!colorEntry) {
-      colorEntry = {
-        color: color, // Use the actual color here
-        colNums: []
-      };
-      colorLineData.push(colorEntry);
-      console.log('New colorEntry added:', JSON.stringify(colorEntry, null, 2));
-    }
-
-    for (let i = startColumn; i < endColumn; i++) {
-      if (!colorEntry.colNums.includes(i)) {
-        colorEntry.colNums.push(i);
-        console.log(`Added column ${i} to color ${color}`);
+      if (!stime || !etime || !color) {
+        console.warn(`Skipping invalid entry: ${JSON.stringify(entry)}`);
+        return;
       }
-    }
-  });
-} else {
-  console.log('No valid data to process in filteredDatar.');
-}
 
-console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
+      const startColumn = timeToColumn(stime);
+      const endColumn = timeToColumn(etime);
+      console.log(`Processing time range: ${stime} to ${etime}, color: ${color}`);
+
+      let colorEntry = colorLineData.find(e => e.color === color);
+      if (!colorEntry) {
+        colorEntry = {
+          color: color, // Use the actual color here
+          colNums: []
+        };
+        colorLineData.push(colorEntry);
+      }
+
+      for (let i = startColumn; i < endColumn; i++) {
+        if (!colorEntry.colNums.includes(i)) {
+          colorEntry.colNums.push(i);
+          console.log(`Added column ${i} to color ${color}`);
+        }
+      }
+    });
+  } else {
+    console.log('No valid data to process in filteredData.');
+  }
+
+  console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
 
 
   const formatTime = (dateString) => {
@@ -174,7 +174,7 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
     });
   };
 
-//   console.log('overtime', overtimeRanges, sda);
+  //   console.log('overtime', overtimeRanges, sda);
 
   const specificKeys = ['Shift_data', 'cycle_data', 'eight_hour_break_violation', 'driver_eleven_viol_data'];
   let overtimeRanges = [];
@@ -189,34 +189,34 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
 
   // Adjustment for 15-minute interval
   const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
-  
+
   const timeToMinutes = (time) => {
     const [hours, mins] = time.split(":").map(Number);
     return hours * 60 + mins;
   };
-  
+
   const minutesToTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
   };
-  
+
   const adjustData = (data) => {
     let previousEndTime = 0;
     const MAX_TIME = 23 * 60 + 45; // Maximum allowed time (23:45)
-  
+
     return data.map((item) => {
       let { stime, etime } = item;
       let stimeInMinutes = timeToMinutes(stime);
       let etimeInMinutes = timeToMinutes(etime);
-  
+
       stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
       stimeInMinutes = roundToNearest15(stimeInMinutes);
       etimeInMinutes = roundToNearest15(etimeInMinutes);
-  
+
       // Ensure end time is not greater than 23:45
       etimeInMinutes = Math.min(Math.max(etimeInMinutes, stimeInMinutes + 15), MAX_TIME);
-  
+
       previousEndTime = etimeInMinutes;
       return {
         ...item,
@@ -225,11 +225,11 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       };
     });
   };
-    // Adjustment END for 15-minute interval
+  // Adjustment END for 15-minute interval
 
   const adjustedOvertimeRanges = adjustData(overtimeRanges);
   console.log('Final adjustedOvertimeRanges:', JSON.stringify(adjustedOvertimeRanges, null, 2));
-  
+
   const xAnnotations = adjustedOvertimeRanges.map(range => ({
     x: range.stime,
     x2: range.etime,
@@ -277,9 +277,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       curve: 'stepline',
       lineCap: 'butt',
       dashArray: 0,
-      colors: ['#000000'], 
+      colors: ['#000000'],
     },
-    colors: ['#000000'], 
+    colors: ['#000000'],
     xaxis: {
       categories: xLabels || [],
       tickAmount: 23,
@@ -340,17 +340,17 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
     tooltip: {
       enabled: true,
       x: {
-          show: true,
+        show: true,
       },
       y: {
-          formatter: (value, { seriesIndex, dataPointIndex, w }) => {
-              const xValue = xSeriesData[dataPointIndex] || "";
-              const yValue = ySeriesData[dataPointIndex] || "";
-              return `Time: ${xValue}, Status: ${yValue}`;
-          }
+        formatter: (value, { seriesIndex, dataPointIndex, w }) => {
+          const xValue = xSeriesData[dataPointIndex] || "";
+          const yValue = ySeriesData[dataPointIndex] || "";
+          return `Time: ${xValue}, Status: ${yValue}`;
+        }
       }
     }
-    
+
   };
 
   return (
@@ -380,12 +380,15 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
               {Array.from({ length: 4 }).map((_, rowIndex) => (
                 <tr key={rowIndex} >
                   {Array.from({ length: 96 }).map((_, colIndex) => {
-                    const matchingTruck = colorLineData.find(truck => truck.colNums.includes(colIndex));
+                    let matchingTruck = colorLineData.find(truck => truck.colNums.includes(colIndex));
+                    console.log('Raw Data matchingTruck', JSON.stringify(colorLineData, null, 2));
                     return (
-                      <td key={colIndex} style={{
+                      <td 
+                      className={`${styles.myTable}`}
+                      key={colIndex} style={{
                         padding: '0px',
                         position: 'relative',
-                        border: matchingTruck && rowIndex === 3 ? '1px solid red' : '0px',
+                       
                       }}>
                         {colIndex % 4 === 3 && (
                           <div style={{
@@ -395,6 +398,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
                             right: 0,
                             height: '10%',
                             borderLeft: '1px solid grey',
+                            borderBottom: matchingTruck && rowIndex === 3 ?
+                            `2px solid ${matchingTruck.color}` :
+                            '1px solid grey'
                           }}
                           ></div>
                         )}
@@ -406,6 +412,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
                             right: 0,
                             height: '15%',
                             borderLeft: '1px solid grey',
+                            borderBottom: matchingTruck && rowIndex === 3 ?
+                            `2px solid ${matchingTruck.color}` :
+                            '1px solid grey'
                           }}
                           ></div>
                         )}
@@ -417,6 +426,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
                             right: 0,
                             height: '10%',
                             borderLeft: '1px solid grey',
+                            borderBottom: matchingTruck && rowIndex === 3 ?
+                            `2px solid ${matchingTruck.color}` :
+                            '1px solid grey'
                           }}
                           ></div>
                         )}
@@ -428,6 +440,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
                             right: 0,
                             height: '100%',
                             borderLeft: '1px solid lightgrey',
+                            borderBottom: matchingTruck && rowIndex === 3 ?
+                            `2px solid ${matchingTruck.color}` :
+                            '1px solid grey'
                           }}
                           ></div>
                         )}
@@ -439,6 +454,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
                             right: 0,
                             height: '100%',
                             borderRight: '1px solid lightgrey',
+                            borderBottom: matchingTruck && rowIndex === 3 ?
+                            `2px solid ${matchingTruck.color}` :
+                            '1px solid grey'
                           }}
                           ></div>
                         )}
