@@ -7,14 +7,20 @@ import GraphChart from 'react-apexcharts';
 // // Load the ApexCharts library dynamically to avoid server-side rendering issues
 const LineChart = dynamic(() => import('react-apexcharts'), { ssr: false, loading: () => <p>Loading...</p> });
 
-function Chart({ processedData, params = null , oData}) {
+function Chart({ processedData, params = null , oData, data}) {
+
+  let ySeriesData = data.map(point => point.status);
+  let xSeriesData = data.map(point => point.time);
+  console.log('xSeriesData....' + ySeriesData + 'xSeriesData-------' + xSeriesData);
   // Generate xData as cumulative sum of totalTime
-  // const xLabels = Array.from({ length: 1440 }, (_, i) => {
+  // const xTooltipLabels = Array.from({ length: 1440 }, (_, i) => {
   //   const hours = String(Math.floor(i / 60)).padStart(2, '0');
   //   const minutes = String(i % 60).padStart(2, '0');
   //   return `${hours}:${minutes}`;
   // });
-  console.log('Chart  oData', JSON.stringify(oData, null, 2));
+
+  //Adjustment for 15 minutes interval
+  console.log('Chart  oData', JSON.stringify(data, null, 2));
 
     const xLabels = Array.from({ length: 1440 / 15 }, (_, i) => {
     const hours = String(Math.floor(i * 15 / 60)).padStart(2, '0');
@@ -52,22 +58,6 @@ function Chart({ processedData, params = null , oData}) {
    console.log('Ystatus....' + yData + 'XDATA-------' + xData);
   //Ystatus....4,3,1,2,1XDATA-------0.00,0.18,0.18,0.47,2.14,17.29
 
-  //testing data 
-  const xSeriesData = ['0.18','0.18','0.47','2.14','17.29'];
-  const ySeriesData = ['4','3','1','2','1'];
-  // console.log('Ystatus....' + yData + 'XDATA-------' + xData);
-
-
-  //this is for y data , we are not using this for now
-  // let fetchingEndStatus = 0;
-
-  // if (processedData.length > 0) {
-  //   const lastLine = processedData[processedData.length - 1];
-  //   if (lastLine.status) {
-  //     fetchingEndStatus = lastLine.status;
-  //   }
-  // }
-
   // Map xData to indices in the 15-minute intervals array
   const mappedData = new Array(xLabels.length).fill(null);
   xData.forEach((time, index) => {
@@ -94,6 +84,8 @@ function Chart({ processedData, params = null , oData}) {
   if (mappedData[0] === null) {
     mappedData[0] = { x: xLabels[0], y: 0 };
   }
+  //Adjustment END for 15 minutes interval
+
   let filteredData = [];
   filteredData = processedData.map(point => point.colorLineData || []);
   let filteredDatar = filteredData[0] || [];
@@ -176,24 +168,11 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       const isEndOfDay = endDate.toISOString().startsWith(today) && (endDate.getUTCHours() === 23 && endDate.getUTCMinutes() === 59);
 
       return {
-        start: startTimeFormatted,
-        end: isEndOfDay ? '24:00' : endTimeFormatted,
+        stime: startTimeFormatted,
+        etime: isEndOfDay ? '24:00' : endTimeFormatted,
       };
     });
   };
-
-//   const overtimeRanges = datas && datas['Shift_data']
-//     ? datas['Shift_data'].map((shift) => ({
-//       start: formatTime(shift['violation_startTime']),
-//       end: formatTime(shift['violation_endTime']),
-//     }))
-//     : [];
-
-//   const sda = [
-//     { start: '02:00', end: '07:00' },
-//     { start: '09:00', end: '09:50' },
-//     { start: '11:00', end: '14:10' }
-//   ];
 
 //   console.log('overtime', overtimeRanges, sda);
 
@@ -207,43 +186,38 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       }
     });
   }
-  overtimeRanges =[
-    {
-      "stime": "20:53",
-      "etime": "23:43"
-    }
-  ];
 
-  //Adjustment for 15 minutes interval
+  // Adjustment for 15-minute interval
   const roundToNearest15 = (minutes) => Math.round(minutes / 15) * 15;
-
+  
   const timeToMinutes = (time) => {
-    if (time === "20:00") return 24 * 60; // Handle the end case
     const [hours, mins] = time.split(":").map(Number);
     return hours * 60 + mins;
   };
-
+  
   const minutesToTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
   };
+  
   const adjustData = (data) => {
     let previousEndTime = 0;
-    return data.map((item, index) => {
+    const MAX_TIME = 23 * 60 + 45; // Maximum allowed time (23:45)
+  
+    return data.map((item) => {
       let { stime, etime } = item;
       let stimeInMinutes = timeToMinutes(stime);
       let etimeInMinutes = timeToMinutes(etime);
-
+  
       stimeInMinutes = Math.max(stimeInMinutes, previousEndTime);
-
       stimeInMinutes = roundToNearest15(stimeInMinutes);
       etimeInMinutes = roundToNearest15(etimeInMinutes);
-
-      etimeInMinutes = Math.max(etimeInMinutes, stimeInMinutes + 15);
-
+  
+      // Ensure end time is not greater than 23:45
+      etimeInMinutes = Math.min(Math.max(etimeInMinutes, stimeInMinutes + 15), MAX_TIME);
+  
       previousEndTime = etimeInMinutes;
-
       return {
         ...item,
         stime: minutesToTime(stimeInMinutes),
@@ -251,11 +225,12 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       };
     });
   };
-  overtimeRanges = adjustData(overtimeRanges);
-  //overtimeRanges.push({ start: '00:00', end: '00:00' });
-  console.log('Final overtimeRanges:', JSON.stringify(overtimeRanges, null, 2));
+    // Adjustment END for 15-minute interval
 
-  const xAnnotations = overtimeRanges.map(range => ({
+  const adjustedOvertimeRanges = adjustData(overtimeRanges);
+  console.log('Final adjustedOvertimeRanges:', JSON.stringify(adjustedOvertimeRanges, null, 2));
+  
+  const xAnnotations = adjustedOvertimeRanges.map(range => ({
     x: range.stime,
     x2: range.etime,
     fillColor: '#FF4560',
@@ -363,9 +338,9 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
       })),
     },
     tooltip: {
-      enabled: false,
+      enabled: true,
       x: {
-          show: false,
+          show: true,
       },
       y: {
           formatter: (value, { seriesIndex, dataPointIndex, w }) => {
@@ -375,20 +350,6 @@ console.log('Final colorLineData:', JSON.stringify(colorLineData, null, 2));
           }
       }
     }
-  //   tooltip: {
-  //   enabled: true,
-  //   x: {
-  //       show: true,
-  //   },
-  //   y: {
-  //       formatter: (value, { seriesIndex, dataPointIndex, w }) => {
-  //           // Static values to display alongside actual data
-  //           // const staticValues = ySeriesData;
-  //           // const staticValue = staticValues[dataPointIndex];
-  //           return `Value: ${xSeriesData}, Static: ${ySeriesData}`;
-  //       }
-  //     }
-  // }
     
   };
 

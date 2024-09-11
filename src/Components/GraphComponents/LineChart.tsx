@@ -584,7 +584,7 @@ function LineChart(params = null) {
           <GraphLabels />
           {/* <Chart processedData={processedData} /> */}
           <Suspense fallback={<div>Loading Chart...</div>}>
-            <LazyChart processedData={processedData} params={params}  oData = {optimisedData} />
+            <LazyChart processedData={processedData} params={params}  oData = {optimisedData} data= {data} />
           </Suspense>
           <TimeFields timeMap={timeMap} />
         </div>
