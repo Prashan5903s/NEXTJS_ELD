@@ -2,7 +2,6 @@
 import React, { use, useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import "react-intl-tel-input/dist/main.css";
 import axios from "axios";
 import { debounce } from "lodash";
 import Select from "react-select";
