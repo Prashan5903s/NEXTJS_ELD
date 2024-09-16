@@ -1,6 +1,65 @@
+// // app/api/auth/[...nextauth]/route.js
+// import NextAuth from 'next-auth';
+// import CredentialsProvider from 'next-auth/providers/credentials';
+
+// const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+
+// const authOptions = {
+//     providers: [
+//         CredentialsProvider({
+//             async authorize(credentials) {
+//                 const response = await fetch(`${url}/user/post/login`, {
+//                     method: 'POST',
+//                     headers: { 'Content-Type': 'application/json' },
+//                     body: JSON.stringify(credentials),
+//                 });
+
+//                 const data = await response.json();
+
+//                 if (response.ok && data.token) {
+//                     return {
+//                         id: data.user_id,
+//                         token: data.token,
+//                         user_type: data.user_type,
+//                         email: data.email,
+//                         mobile_no: data.mobile_no,
+//                         first_name: data.first_name,
+//                         last_name: data.last_name,
+//                         avatar_image: data.avatar_image,
+//                     };
+//                 } else {
+//                     throw new Error('Invalid credentials');
+//                 }
+//             },
+//         }),
+//     ],
+//     callbacks: {
+//         async jwt({ token, user }) {
+//             if (user) {
+//                 token.id = user.id;
+//                 token.token = user.token;
+//                 token.user_type = user.user_type;
+//             }
+//             return token;
+//         },
+//         async session({ session, token }) {
+//             session.user.id = token.id;
+//             session.user.token = token.token;
+//             session.user.user_type = token.user_type;
+//             return session;
+//         },
+//     },
+// };
+
+// const handler = NextAuth(authOptions);
+
+// export { handler as GET, handler as POST };
+
+// // export default NextAuth(authOptions);
+
+
 // app/api/auth/[...nextauth]/route.js
 
-import { da } from '@faker-js/faker';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
@@ -10,27 +69,35 @@ const authOptions = {
     providers: [
         CredentialsProvider({
             async authorize(credentials) {
-                const response = await fetch(`${url}/user/post/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(credentials),
-                });
+                try {
+                    const response = await fetch(`${url}/user/post/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(credentials),
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok && data.token) {
-                    return {
-                        id: data.user_id,
-                        token: data.token,
-                        user_type: data.user_type,
-                        email: data.email,
-                        mobile_no: data.mobile_no,
-                        first_name: data.first_name,
-                        last_name: data.last_name,
-                        avatar_image: data.avatar_image,
-                    };
-                } else {
-                    throw new Error('Invalid credentials');
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Login failed');
+                    }
+
+                    if (data.token) {
+                        return {
+                            id: data.user_id,
+                            token: data.token,
+                            user_type: data.user_type,
+                            email: data.email,
+                            mobile_no: data.mobile_no,
+                            first_name: data.first_name,
+                            last_name: data.last_name,
+                            avatar_image: data.avatar_image,
+                        };
+                    }
+
+                    throw new Error('Invalid token in response');
+                } catch (error) {
+                    throw new Error(error.message || 'Error during login');
                 }
             },
         }),
@@ -45,16 +112,33 @@ const authOptions = {
             return token;
         },
         async session({ session, token }) {
-            session.user.id = token.id;
-            session.user.token = token.token;
-            session.user.user_type = token.user_type;
+            session.user = {
+                id: token.id,
+                token: token.token,
+                user_type: token.user_type,
+                email: token.email,
+            };
             return session;
         },
     },
+    cookies: {
+        sessionToken: {
+            name: 'next-auth.session-token',  // Custom cookie name
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production', // Secure only in production
+            },
+        },
+    },
+    pages: {
+        signIn: '/auth/signin',  // Customize sign-in page if needed
+        error: '/auth/error',    // Customize error page if needed
+    },
+    secret: process.env.NEXTAUTH_SECRET,  // Make sure you have this set in your environment variables
 };
 
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-
-// export default NextAuth(authOptions);
