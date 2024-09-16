@@ -9,7 +9,7 @@ import { debounce } from "lodash";
 import { getPermissions } from "@/Components/permission/page";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-
+import { ToastContainer } from "react-toastify";
 import {
   useReactTable,
   flexRender,
@@ -210,6 +210,7 @@ const DriverTable = () => {
   if (loading) {
     return (
       <>
+        <ToastContainer />
         <div className="listItems">
           <div className="topBar">
             <div className="title">
@@ -306,6 +307,7 @@ const DriverTable = () => {
 
   return (
     <>
+      <ToastContainer />
       <div className="listItems">
         <div className="topBar">
           <div className="title">
