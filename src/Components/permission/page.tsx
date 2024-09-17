@@ -1,13 +1,14 @@
-'use client'
-
-// File: /lib/getPermissions.js
+let cache = {};
 
 export async function getPermissions(token = null) {
     const BackEND = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    
 
     if (!token) {
         return null;
+    }
+
+    if (cache[token]) {
+        return cache[token];
     }
 
     try {
@@ -24,6 +25,7 @@ export async function getPermissions(token = null) {
         }
 
         const result = await response.json();
+        cache[token] = result;
         return result;
     } catch (err) {
         console.error('Error fetching permissions:', err);

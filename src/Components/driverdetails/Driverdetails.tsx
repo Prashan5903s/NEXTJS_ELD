@@ -45,7 +45,6 @@ export default function Driverdetails() {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [markerIcons, setMarkerIcons] = useState({});
   const [hoveredMarker, setHoveredMarker] = useState(null);
-  const [activeMarker, setActiveMarker] = useState(null);
   const { slug } = useParams();
   const BackEND = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   const MapKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_KEY;
@@ -96,7 +95,7 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
-    }, 300), // 300ms debounce delay
+    }, 1000), // 300ms debounce delay
     [BackEND, token] // Dependencies for useCallback
   );
 
@@ -131,7 +130,7 @@ export default function Driverdetails() {
       } finally {
         setLoading(false);
       }
-    }, 300), // Adjust the debounce delay (300ms is just an example)
+    }, 1000), // Adjust the debounce delay (300ms is just an example)
     [slug, token, BackEND]
   );
 
@@ -163,7 +162,7 @@ export default function Driverdetails() {
         setIsLoading(false);
         setError(err.message);
       }
-    }, 300), // Adjust debounce delay (e.g., 300ms)
+    }, 1000), // Adjust debounce delay (e.g., 300ms)
     [token, BackEND, setIsLoading] // Memoized dependencies
   );
 
@@ -378,9 +377,8 @@ export default function Driverdetails() {
               >
                 <span className="">
                   <i
-                    className={`ki-duotone ${
-                      isDetailOpen ? "ki-up" : "ki-down"
-                    } fs-5 fw-bolder`}
+                    className={`ki-duotone ${isDetailOpen ? "ki-up" : "ki-down"
+                      } fs-5 fw-bolder`}
                   ></i>
                 </span>
                 <h4 className="fw-bold mb-0 ms-4">Details</h4>
@@ -407,9 +405,8 @@ export default function Driverdetails() {
               >
                 <span className="">
                   <i
-                    className={`ki-duotone ${
-                      isHourOpen ? "ki-up" : "ki-down"
-                    } fs-5 fw-bolder`}
+                    className={`ki-duotone ${isHourOpen ? "ki-up" : "ki-down"
+                      } fs-5 fw-bolder`}
                   ></i>
                 </span>
                 <h5 className="fw-bold mb-0 ms-4">Hours of Service</h5>
@@ -532,15 +529,15 @@ export default function Driverdetails() {
                   icon={
                     markerIcons[vehicle.name]
                       ? {
-                          url: markerIcons[vehicle.name],
-                          scaledSize: new window.google.maps.Size(60, 60),
-                          anchor: new window.google.maps.Point(30, 30),
-                        }
+                        url: markerIcons[vehicle.name],
+                        scaledSize: new window.google.maps.Size(60, 60),
+                        anchor: new window.google.maps.Point(30, 30),
+                      }
                       : {
-                          url: myImage.src, // Fallback to default image if needed
-                          scaledSize: new window.google.maps.Size(60, 60),
-                          anchor: new window.google.maps.Point(30, 30),
-                        }
+                        url: myImage.src, // Fallback to default image if needed
+                        scaledSize: new window.google.maps.Size(60, 60),
+                        anchor: new window.google.maps.Point(30, 30),
+                      }
                   }
                   onMouseOver={() => setHoveredMarker(vehicle.name)}
                   onMouseOut={() => setHoveredMarker(null)}

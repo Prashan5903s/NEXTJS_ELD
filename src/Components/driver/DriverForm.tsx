@@ -560,14 +560,14 @@ function DriverForm({ id }) {
   };
 
   // Debounced functions with memoization
-  const debouncedFetchEdit = useCallback(debounce(Edit, 300), [id, token]); // Memoized and dependent on id and token
-  const debouncedFetchAddress = useCallback(debounce(fetchAddress, 300), [token]); // Memoized and dependent on token
+  const debouncedFetchEdit = useCallback(debounce(Edit, 1000), [id, token]); // Memoized and dependent on id and token
+  const debouncedFetchAddress = useCallback(debounce(fetchAddress, 1000), [token]); // Memoized and dependent on token
   const debouncedFetchHoursOfService = useCallback(
-    debounce(fetchHoursOfService, 300),
+    debounce(fetchHoursOfService, 1000),
     [token]
   );
   const debouncedFetchHomeTerminal = useCallback(
-    debounce(fetchHomeTerminal, 300),
+    debounce(fetchHomeTerminal, 1000),
     [token]
   );
 
@@ -715,7 +715,7 @@ function DriverForm({ id }) {
   };
 
   // Use useCallback to memoize the debounced function
-  const debouncedOnSubmit = useCallback(debounce(onSubmitHandler, 300), [
+  const debouncedOnSubmit = useCallback(debounce(onSubmitHandler, 1000), [
     id,
     token,
   ]);

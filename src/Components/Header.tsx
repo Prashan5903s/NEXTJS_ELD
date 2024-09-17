@@ -66,7 +66,7 @@ function Header({ toggle }: { toggle?: any }) {
         setIsDataLoading(false);
         setError(err.message);
       }
-    }, 500),
+    }, 1000),
     [accessToken, url, setIsLoading]
   );
 
@@ -96,6 +96,8 @@ function Header({ toggle }: { toggle?: any }) {
     } catch (error) {
       console.error(error);
       setIsLoading(false);
+    } finally {
+      router.push("/");
     }
   }
 
@@ -119,7 +121,7 @@ function Header({ toggle }: { toggle?: any }) {
         setIsDataLoading(false);
         setError(err.message);
       }
-    }, 500),
+    }, 1000),
     [accessToken, url, setIsLoading]
   );
 
@@ -147,7 +149,7 @@ function Header({ toggle }: { toggle?: any }) {
             router.push("/");
           });
       }
-    }, 500), // 300ms debounce time
+    }, 1000), // 300ms debounce time
     [url, accessToken]
   );
 
@@ -165,7 +167,7 @@ function Header({ toggle }: { toggle?: any }) {
 
   return (
     <>
-      <header className="d-flex p-7">
+      <header className="d-flex p-7 py-7">
         <div
           className="app-header-logo d-flex align-items-center ps-lg-6"
           id="kt_app_header_logo"
@@ -215,9 +217,8 @@ function Header({ toggle }: { toggle?: any }) {
               </span>
             </div>
             <div
-              className={`menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px ${
-                isOpenNotifications === true ? "show" : ""
-              } position-fixed m-0`}
+              className={`menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px ${isOpenNotifications === true ? "show" : ""
+                } position-fixed m-0`}
               data-kt-menu="true"
               id="kt_menu_notifications"
               style={{
@@ -279,8 +280,8 @@ function Header({ toggle }: { toggle?: any }) {
                           <span className="badge badge-light fs-8">
                             {data.created_at
                               ? formatDistanceToNow(new Date(data.created_at), {
-                                  addSuffix: true,
-                                })
+                                addSuffix: true,
+                              })
                               : ""}
                           </span>
                         </div>
@@ -302,9 +303,8 @@ function Header({ toggle }: { toggle?: any }) {
                 height={50}
               />
               <div
-                className={`menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px ${
-                  isOpen === true ? "show" : ""
-                } position-fixed m-0`}
+                className={`menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px ${isOpen === true ? "show" : ""
+                  } position-fixed m-0`}
                 data-kt-menu="true"
                 style={{
                   inset: "0px 0px auto auto",
@@ -375,9 +375,8 @@ function Header({ toggle }: { toggle?: any }) {
                   </a>
 
                   <div
-                    className={`menu-sub menu-sub-dropdown w-175px py-4 position-fixed m-0 ${
-                      isDropdownOpen === true ? "show" : ""
-                    }`}
+                    className={`menu-sub menu-sub-dropdown w-175px py-4 position-fixed m-0 ${isDropdownOpen === true ? "show" : ""
+                      }`}
                     style={{
                       zIndex: 108,
                       inset: "0px 0px auto auto",

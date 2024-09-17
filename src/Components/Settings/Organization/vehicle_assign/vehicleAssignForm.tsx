@@ -91,7 +91,7 @@ function VehicleAssignForm({ id }) {
         } catch (error) {
             // toastr["error"]("Error fetching driver vehicleAssign: " + error.message);
         }
-    }, 300), [id, url, token]); // Adjust debounce delay as needed
+    }, 1000), [id, url, token]); // Adjust debounce delay as needed
 
     useEffect(() => {
         if (token) {
@@ -123,7 +123,7 @@ function VehicleAssignForm({ id }) {
         } catch (error) {
             // toastr["error"]("Error fetching vehicleAssign data: " + error.message);
         }
-    }, 300), [url, token]); // Adjust debounce delay as needed
+    }, 1000), [url, token]); // Adjust debounce delay as needed
 
     useEffect(() => {
         if (token) {
@@ -219,7 +219,7 @@ function VehicleAssignForm({ id }) {
                     await addvehicleAssign(data);
                 }
             }
-        }, 300), // Adjust debounce delay as needed
+        }, 1000), // Adjust debounce delay as needed
         [id, addvehicleAssign, editvehicleAssign, token]
     );
 

@@ -209,7 +209,7 @@ function FleetUserForm({ id = null }) {
   };
 
   const debouncedEdit = useCallback(
-    debounce(Edit, 2000), // Adjust the delay as needed
+    debounce(Edit, 1000), // Adjust the delay as needed
     [id, url] // Add 'id' and 'url' to dependencies
   );
 
@@ -229,7 +229,7 @@ function FleetUserForm({ id = null }) {
   };
 
   const debouncedAddress = useCallback(
-    debounce(Address, 2000), // Adjust the delay as needed
+    debounce(Address, 1000), // Adjust the delay as needed
     [url, token] // Add 'url' to dependencies
   );
 

@@ -124,7 +124,7 @@ export default function AddUserRoleComponent({ id }) {
         console.error("Error fetching users:", error);
         setLoading(false);
       }
-    }, 300), // Adjust debounce delay as needed (in milliseconds)
+    }, 1000), // Adjust debounce delay as needed (in milliseconds)
     [token, url] // Dependencies
   );
 
@@ -163,7 +163,7 @@ export default function AddUserRoleComponent({ id }) {
         console.error("Error fetching users:", error);
         setLoading(false);
       }
-    }, 300), // Adjust debounce delay as needed (in milliseconds)
+    }, 1000), // Adjust debounce delay as needed (in milliseconds)
     [url, token] // Dependencies
   );
 
@@ -301,7 +301,7 @@ export default function AddUserRoleComponent({ id }) {
     } finally {
       setIsLoading(false); // Ensure loading state is updated
     }
-  }, 300), [url, router, token]);
+  }, 1000), [url, router, token]);
 
   const debouncedEditData = useCallback(debounce(async (data) => {
     setIsLoading(true);
@@ -330,7 +330,7 @@ export default function AddUserRoleComponent({ id }) {
     } finally {
       setIsLoading(false); // Ensure loading state is updated
     }
-  }, 300), [url, id, router, token]);
+  }, 1000), [url, id, router, token]);
 
   const submit = async (data) => {
     const filteredItems = items.map(item => ({

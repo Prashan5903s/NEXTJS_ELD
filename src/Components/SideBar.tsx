@@ -43,15 +43,21 @@ const Sidebar = ({
         const perms = await getPermissions(token);
         setPermissn(perms);
       } catch (error) {
-        console.error("Error fetching permissions:", error);
+        if (error.response && error.response.status === 429) {
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
       }
-    }, 500), // Adjust the debounce delay as needed
-    [token] // Empty dependency array ensures this function is only created once
+    }, 1000), // Increase debounce to 2 seconds
+    [token]
   );
 
   useEffect(() => {
-    fetchPermissions(token);
-  }, [fetchPermissions, setPermissn, token]); // Only re-run effect if fetchPermissions changes
+    if (token) {
+      fetchPermissions(token);
+    }
+  }, [fetchPermissions, token]);
 
   const menuItems = [
     {

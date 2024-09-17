@@ -74,23 +74,25 @@ const DocumentTable = () => {
 
   const fetchPermissions = useCallback(
     debounce(async (token) => {
-      setLoading(true); // Set loading state to true before fetching permissions
       try {
         const perms = await getPermissions(token);
         setPermissn(perms);
       } catch (error) {
-        // setError('Error fetching permissions: ' + error.message);
-      } finally {
+        if (error.response && error.response.status === 429) {
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
       }
-    }, 500), // Debounce time in milliseconds
-    [token] // No dependencies, this will only be created once
+    }, 1000), // Increase debounce to 2 seconds
+    [token]
   );
 
   useEffect(() => {
     if (token) {
       fetchPermissions(token);
     }
-  }, [fetchPermissions, token]); // Dependency on the debounced function
+  }, [fetchPermissions, token]);
 
   const formattedDate = (dateString) => {
     const date = new Date(dateString);

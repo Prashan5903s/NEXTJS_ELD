@@ -48,14 +48,29 @@ export default function UserRolesComponent(): JSX.Element {
 
   const fetchPermissions = useCallback(
     debounce(async (token) => {
-      try {
-        const perms = await getPermissions(token);
-        setPermissn(perms);
-      } catch (error) {
-        console.error("Error fetching permissions:", error);
-      }
-    }, 300), // Adjust the debounce delay as needed
-    [] // This ensures the debounced function is only created once
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      const fetchWithRetry = async () => {
+        try {
+          const perms = await getPermissions(token);
+          setPermissn(perms);
+        } catch (error) {
+          if (error.response?.status === 429 && attempts < maxAttempts) {
+            attempts++;
+            const retryAfter = error.response.headers['retry-after'] || 1000; // Default to 1 second if not specified
+            console.log(`Retrying after ${retryAfter}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter));
+            await fetchWithRetry();
+          } else {
+            console.error("Error fetching permissions:", error);
+          }
+        }
+      };
+
+      await fetchWithRetry();
+    }, 1000), // Adjust the debounce delay as needed
+    [token]
   );
 
   useEffect(() => {
@@ -97,7 +112,7 @@ export default function UserRolesComponent(): JSX.Element {
       } finally {
         setLoading(false);
       }
-    }, 300),
+    }, 1000),
     [url, token]
   );
 

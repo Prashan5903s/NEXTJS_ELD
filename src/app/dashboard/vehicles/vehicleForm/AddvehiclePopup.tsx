@@ -268,7 +268,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
     }
 
     // Create debounced function
-    const debouncedSubmit = useDebouncedSubmit(handleFormSubmit, 500); // Adjust delay as needed
+    const debouncedSubmit = useDebouncedSubmit(handleFormSubmit, 1000); // Adjust delay as needed
 
     const onSubmitChange = async (e) => {
         e.preventDefault();
@@ -289,7 +289,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         } catch (error) {
             console.error("Error fetching data:", error.message);
         }
-    }, 500), [url, token]);
+    }, 1000), [url, token]);
 
     useEffect(() => {
         if (token) {
@@ -312,7 +312,7 @@ const AddVehicleModal = ({ id, close, open, updateVehiclesList }) => {
         } catch (error) {
             console.error("Error fetching data:", error.message);
         }
-    }, 500), [url, token]);
+    }, 1000), [url, token]);
 
     useEffect(() => {
         if (id && token) {

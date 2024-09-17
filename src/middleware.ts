@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
 import { withAuth } from "next-auth/middleware";
-
 import type { NextRequestWithAuth } from "next-auth/middleware";
+import { ur } from "@faker-js/faker";
+import { url } from "inspector";
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
 
 if (!BACKEND_API_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_BACKEND_API_URL is not defined in environment variables"
-  );
+  throw new Error("NEXT_PUBLIC_BACKEND_API_URL is not defined in environment variables");
 }
 
 export default withAuth(
@@ -207,252 +205,186 @@ export default withAuth(
       }
     }
 
-    // if (
-    //   isDList ||
-    //   isDAdd ||
-    //   isDEdit ||
-    //   isDDetail ||
-    //   isHList ||
-    //   isUserList ||
-    //   isVList ||
-    //   isvAssignList ||
-    //   isDActivity ||
-    //   isDAList ||
-    //   isLList ||
-    //   isVAList ||
-    //   isVAAList ||
-    //   isVAEList ||
-    //   isDEList
-    // ) {
-    //   try {
-    //     // Fetch all permissions once
-    //     const response = await fetch(`${BACKEND_API_URL}/transport/permission`, {
-    //       method: "GET",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         Authorization: `Bearer ${token}`,
-    //       },
-    //     });
-
-    //     if (!response.ok) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-
-    //     const result = await response.json();
-
-    //     // Check each permission explicitly
-    //     if (isDList && !result.includes(12)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDAdd && !result.includes(10)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDEdit && !result.includes(11)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDDetail && !result.includes(36)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isHList && !result.includes(37)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isUserList && !result.includes(26)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isVList && !result.includes(3)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isvAssignList && !result.includes(29)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDAList && !result.includes(35)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isLList && !result.includes(6)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isVAList && !result.includes(29)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isVAAList && !result.includes(27)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isVAEList && !result.includes(28)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDActivity && !result.includes(32)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isADList && !result.includes(33)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-    //     if (isDEList && !result.includes(34)) {
-    //       return NextResponse.redirect(new URL("/dashboard", request.url));
-    //     }
-
-    //     // Check edit detail permissions if necessary
-    //     if (isDEdit || isDDetail || isHList) {
-    //       const editDetailResponse = await fetch(
-    //         `${BACKEND_API_URL}/driver/edit/check/${id}`,
-    //         {
-    //           method: "GET",
-    //           headers: {
-    //             "Content-Type": "application/json",
-    //             Authorization: `Bearer ${token}`,
-    //           },
-    //         }
-    //       );
-
-    //       if (!editDetailResponse.ok) {
-    //         console.log("Error fetching edit detail permissions");
-    //         return NextResponse.redirect(new URL("/dashboard", request.url));
-    //       }
-
-    //       const editDetailResult = await editDetailResponse.json();
-
-    //       if (!editDetailResult) {
-    //         return NextResponse.redirect(new URL("/dashboard", request.url));
-    //       }
-    //     }
-    //   } catch (err) {
-    //     console.error("Error fetching permissions:", err);
-    //     return NextResponse.redirect(new URL("/dashboard", request.url));
-    //   }
-    // }
-
     let permissionCache = null;
     let cacheTimestamp = 0;
 
     // Cache timeout of 10 minutes (600,000 milliseconds)
     const CACHE_TIMEOUT = 600000;
+    const BACKEND_API_URLS = BACKEND_API_URL; // Replace with your backend URL
 
-    if (
-      isDList ||
-      isDAdd ||
-      isDEdit ||
-      isDDetail ||
-      isHList ||
-      isUserList ||
-      isVList ||
-      isvAssignList ||
-      isDActivity ||
-      isDAList ||
-      isLList ||
-      isVAList ||
-      isVAAList ||
-      isVAEList ||
-      isDEList
-    ) {
+    // Function to fetch with retry mechanism for handling 429 Too Many Requests error
+    const fetchWithRetry = async (url, options, retries = 5, delay = 1000) => {
       try {
-        const currentTime = Date.now();
+        const response = await fetch(url, options);
 
-        // Use cached permissions if available and within cache timeout
-        if (permissionCache && currentTime - cacheTimestamp < CACHE_TIMEOUT) {
-          var result = permissionCache;
-        } else {
-          // Fetch all permissions if cache is stale or unavailable
-          const response = await fetch(`${BACKEND_API_URL}/transport/permission`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          });
+        if (response.status === 429 && retries > 0) {
+          // Too Many Requests: Wait for a delay, then retry
+          let retryAfter = response.headers.get("Retry-After") || delay;
 
-          if (!response.ok) {
-            return NextResponse.redirect(new URL("/dashboard", request.url));
-          }
+          // Ensure retryAfter is a number (if it's a string, convert to number)
+          retryAfter = Number(retryAfter) * 1000 || delay; // Retry-After is often in seconds, so multiply by 1000
 
-          result = await response.json();
-          permissionCache = result; // Cache permissions
-          cacheTimestamp = currentTime; // Update cache timestamp
+          await new Promise((resolve) => setTimeout(resolve, retryAfter));
+          return fetchWithRetry(url, options, retries - 1, delay * 2); // Exponential backoff
         }
 
-        // Check permissions explicitly
-        if (isDList && !result.includes(12)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
+        return response;
+      } catch (err) {
+        if (retries > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          return fetchWithRetry(url, options, retries - 1, delay * 2); // Retry with exponential backoff
         }
-        if (isDAdd && !result.includes(10)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isDEdit && !result.includes(11)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isDDetail && !result.includes(36)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isHList && !result.includes(37)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isUserList && !result.includes(26)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isVList && !result.includes(3)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isvAssignList && !result.includes(29)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isDAList && !result.includes(35)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isLList && !result.includes(6)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isVAList && !result.includes(29)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isVAAList && !result.includes(27)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isVAEList && !result.includes(28)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isDActivity && !result.includes(32)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isADList && !result.includes(33)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-        if (isDEList && !result.includes(34)) {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
+        throw err;
+      }
+    };
 
-        // Check edit detail permissions if necessary
-        if (isDEdit || isDDetail || isHList) {
-          const editDetailResponse = await fetch(
-            `${BACKEND_API_URL}/driver/edit/check/${id}`,
-            {
+    const checkPermissions = async (token, request, id, flags) => {
+      const {
+        isDList,
+        isDAdd,
+        isDEdit,
+        isDDetail,
+        isHList,
+        isUserList,
+        isVList,
+        isvAssignList,
+        isDActivity,
+        isDAList,
+        isLList,
+        isVAList,
+        isVAAList,
+        isVAEList,
+        isDEList,
+        isADList,
+      } = flags;
+
+      if (
+        isDList ||
+        isDAdd ||
+        isDEdit ||
+        isDDetail ||
+        isHList ||
+        isUserList ||
+        isVList ||
+        isvAssignList ||
+        isDActivity ||
+        isDAList ||
+        isLList ||
+        isVAList ||
+        isVAAList ||
+        isVAEList ||
+        isDEList
+      ) {
+        try {
+          const currentTime = Date.now();
+
+          // Use cached permissions if available and within cache timeout
+          if (permissionCache && currentTime - cacheTimestamp < CACHE_TIMEOUT) {
+            var result = permissionCache;
+          } else {
+            // Fetch all permissions if cache is stale or unavailable
+            const response = await fetchWithRetry(`${BACKEND_API_URLS}/transport/permission`, {
               method: "GET",
               headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
+            });
+
+            if (!response.ok) {
+              return NextResponse.redirect(new URL("/dashboard", request.url));
             }
-          );
 
-          if (!editDetailResponse.ok) {
-            console.log("Error fetching edit detail permissions");
+            result = await response.json();
+            permissionCache = result; // Cache permissions
+            cacheTimestamp = currentTime; // Update cache timestamp
+          }
+
+          // Check permissions explicitly
+          if (isDList && !result.includes(12)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDAdd && !result.includes(10)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDEdit && !result.includes(11)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDDetail && !result.includes(36)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isHList && !result.includes(37)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isUserList && !result.includes(26)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isVList && !result.includes(3)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isvAssignList && !result.includes(29)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDAList && !result.includes(35)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isLList && !result.includes(6)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isVAList && !result.includes(29)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isVAAList && !result.includes(27)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isVAEList && !result.includes(28)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDActivity && !result.includes(32)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isADList && !result.includes(33)) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+          }
+          if (isDEList && !result.includes(34)) {
             return NextResponse.redirect(new URL("/dashboard", request.url));
           }
 
-          const editDetailResult = await editDetailResponse.json();
+          // Check edit detail permissions if necessary
+          if (isDEdit || isDDetail || isHList) {
+            const editDetailResponse = await fetchWithRetry(
+              `${BACKEND_API_URLS}/driver/edit/check/${id}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
-          if (!editDetailResult) {
-            return NextResponse.redirect(new URL("/dashboard", request.url));
+            if (!editDetailResponse.ok) {
+              console.log("Error fetching edit detail permissions");
+              return NextResponse.redirect(new URL("/dashboard", request.url));
+            }
+
+            const editDetailResult = await editDetailResponse.json();
+
+            if (!editDetailResult) {
+              return NextResponse.redirect(new URL("/dashboard", request.url));
+            }
           }
+        } catch (err) {
+          console.error("Error fetching permissions:", err);
+          return NextResponse.redirect(new URL("/dashboard", request.url));
         }
-      } catch (err) {
-        console.error("Error fetching permissions:", err);
-        return NextResponse.redirect(new URL("/dashboard", request.url));
       }
-    }
-
+    };
 
     if (!isUAdd) {
       if (isUList) {
         const editRoleResponse = await fetch(
-          `${BACKEND_API_URL}/check/roles/${id}`,
+          `${BACKEND_API_URLS}/check/roles/${id}`,
           {
             method: "GET",
             headers: {

@@ -99,7 +99,7 @@ function ActivityForm({ id }) {
     }, [id, url, token]);
 
     // Debounced version of fetchEditActivity
-    const debouncedFetchEditActivity = useCallback(debounce(fetchEditActivity, 300), [fetchEditActivity, token]);
+    const debouncedFetchEditActivity = useCallback(debounce(fetchEditActivity, 1000), [fetchEditActivity, token]);
 
     useEffect(() => {
         if (token) {
@@ -127,7 +127,7 @@ function ActivityForm({ id }) {
         } catch (error) {
             // toastr["error"]("Error fetching activity data: " + error.message);
         }
-    }, 300), [url, token]); // Adjust debounce delay as needed
+    }, 1000), [url, token]); // Adjust debounce delay as needed
 
     useEffect(() => {
         if (token) {
@@ -219,7 +219,7 @@ function ActivityForm({ id }) {
                 await addActivity(data);
             }
         }
-    }, 300), [id, token]); // Debounce for 1000ms (1 second)
+    }, 1000), [id, token]); // Debounce for 1000ms (1 second)
 
     useEffect(() => {
         if (token) {

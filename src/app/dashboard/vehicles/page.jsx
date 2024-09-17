@@ -42,14 +42,20 @@ const VehicleTable = () => {
         const perms = await getPermissions(token);
         setPermissn(perms);
       } catch (error) {
-        console.error("Error fetching permissions:", error);
+        if (error.response && error.response.status === 429) {
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
       }
-    }, 500), // 2-second debounce
+    }, 1000), // Increase debounce to 2 seconds
     [token]
-  )
+  );
 
   useEffect(() => {
-    fetchPermissions(token);
+    if (token) {
+      fetchPermissions(token);
+    }
   }, [fetchPermissions, token]);
 
   const formattedDate = (dateString) => {
@@ -91,7 +97,7 @@ const VehicleTable = () => {
   };
 
   // Use debounce to limit the API calls
-  const debouncedFetchVehicles = useCallback(debounce(fetchVehicles, 500), [
+  const debouncedFetchVehicles = useCallback(debounce(fetchVehicles, 1000), [
     token,
     url,
   ]);
@@ -198,7 +204,7 @@ const VehicleTable = () => {
                   className="form-control"
                 />
               </div>
-              {permissn && permissn.length > 0 &&  permissn.includes(1) && (
+              {permissn && permissn.length > 0 && permissn.includes(1) && (
                 <div className="btnGroup">
                   <button
                     onClick={() => openModal("add")}

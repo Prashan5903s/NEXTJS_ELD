@@ -37,6 +37,12 @@ const Page = () => {
 
   const token = session && session.user && session?.user?.token;
 
+  useEffect(() => {
+    if (!token) {
+      router.push('/');
+    }
+  }, [token]);
+
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
   const MapKey = process.env.NEXT_PUBLIC_GOOGLE_MAP_KEY;
 
@@ -70,7 +76,7 @@ const Page = () => {
       } finally {
         setLoading(false);
       }
-    }, 500),
+    }, 1000),
     [url, token]
   );
 

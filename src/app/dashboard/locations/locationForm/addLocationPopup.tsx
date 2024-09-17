@@ -226,7 +226,7 @@ const AddLocationModal: React.FC<{ id: number | null, close: (open: boolean) => 
 
   };
 
-  const debouncedFormSubmission = debounce(handleFormSubmission, 500);
+  const debouncedFormSubmission = debounce(handleFormSubmission, 1000);
 
   const onSubmitChange = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -253,7 +253,7 @@ const AddLocationModal: React.FC<{ id: number | null, close: (open: boolean) => 
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-  }, 500), [url, token]);
+  }, 1000), [url, token]);
 
   useEffect(() => {
     fetchData();
@@ -292,7 +292,7 @@ const AddLocationModal: React.FC<{ id: number | null, close: (open: boolean) => 
     } catch (error) {
       console.error("Error fetching edit data:", error);
     }
-  }, 500), [url, token, id]);
+  }, 1000), [url, token, id]);
 
   useEffect(() => {
     if (token) {

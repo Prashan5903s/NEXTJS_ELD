@@ -31,14 +31,22 @@ const DriverTable = () => {
 
   const token = session && session.user && session?.user?.token;
 
-  const fetchPermissions = useCallback(debounce(async (token) => {
-    try {
-      const perms = await getPermissions(token);
-      setPermissn(perms);
-    } catch (error) {
-      console.error("Error fetching permissions:", error);
-    }
-  }, 500), [token]); // Add empty dependency array to ensure debounce is stable
+  const fetchPermissions = useCallback(
+    debounce(async (token) => {
+      try {
+        const perms = await getPermissions(token);
+        setPermissn(perms);
+      } catch (error) {
+        if (error.response && error.response.status === 429) {
+          console.warn("Rate limit hit, retrying in 5 seconds...");
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
+      }
+    }, 1000), // Increase debounce to 2 seconds
+    [token]
+  );
 
   useEffect(() => {
     if (token) {
@@ -70,7 +78,7 @@ const DriverTable = () => {
       } finally {
         setLoading(false);
       }
-    }, 500),
+    }, 1000),
     [url, token]
   );
 

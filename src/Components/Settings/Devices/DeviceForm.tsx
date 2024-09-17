@@ -170,7 +170,7 @@ function DeviceForm({ id }) {
         } catch (error) {
             // toastr["error"]("Error fetching driver device: " + error.message);
         }
-    }, 300), [id, url, token]);
+    }, 1000), [id, url, token]);
 
     useEffect(() => {
         if (token) {
@@ -198,7 +198,7 @@ function DeviceForm({ id }) {
         } catch (error) {
             // toastr["error"]("Error fetching device data: " + error.message);
         }
-    }, 300), [url, token]);
+    }, 1000), [url, token]);
 
     useEffect(() => {
         if (token) {
@@ -244,7 +244,7 @@ function DeviceForm({ id }) {
                 setIsLoading(false);
                 // toastr["error"]("Error adding driver: " + error.message);
             }
-        }, 300), // Adjust debounce delay as needed
+        }, 1000), // Adjust debounce delay as needed
         [url, token, router, token]
     );
 
@@ -274,7 +274,7 @@ function DeviceForm({ id }) {
                 setIsLoading(false);
                 // toastr["error"]("Error updating driver: " + error.message);
             }
-        }, 300), // Adjust debounce delay as needed
+        }, 1000), // Adjust debounce delay as needed
         [url, token, router, token]
     );
 

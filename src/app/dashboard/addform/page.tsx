@@ -1,14 +1,9 @@
 'use client'
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import axios from "axios";
 
 function AddForm() {
-    const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;
-    const router = useRouter();
-    const [authenticated, setAuthenticated] = useState(false);
 
     return (
         <div className={`d-flex flex-column flex-column-fluid showForm `} >

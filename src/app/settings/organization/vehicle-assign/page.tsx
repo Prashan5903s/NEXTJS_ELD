@@ -74,11 +74,15 @@ const VehicleAssignTable: React.FC = () => {
         const perms = await getPermissions(token);
         setPermissn(perms);
       } catch (error) {
-        console.error("Error fetching permissions:", error);
+        if (error.response && error.response.status === 429) {
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
       }
-    }, 500), // 2-second debounce
+    }, 1000), // Increase debounce to 2 seconds
     [token]
-  )
+  );
 
   useEffect(() => {
     if (token) {

@@ -75,22 +75,26 @@ const LocationTable = () => {
 
   const fetchPermissions = useCallback(
     debounce(async (token) => {
-      if (!token) return; // Guard clause to ensure token is present
       try {
         const perms = await getPermissions(token);
         setPermissions(perms);
       } catch (error) {
-        console.error("Error fetching permissions:", error);
+        if (error.response && error.response.status === 429) {
+          console.warn("Rate limit hit, retrying in 5 seconds...");
+          setTimeout(() => fetchPermissions(token), 5000); // Retry after 5 seconds
+        } else {
+          console.error("Error fetching permissions:", error);
+        }
       }
-    }, 500),
-    [token] // No need for token in dependencies, debounce should not recreate
+    }, 1000), // Increase debounce to 2 seconds
+    [token]
   );
 
   useEffect(() => {
     if (token) {
       fetchPermissions(token);
     }
-  }, [token, fetchPermissions]); // token dependency included
+  }, [fetchPermissions, token]);
 
   const formattedDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -193,7 +197,7 @@ const LocationTable = () => {
 
   // Debounced fetchLocation function
   const debouncedFetchLocation = useCallback(
-    debounce(fetchLocation, 500),
+    debounce(fetchLocation, 1000),
     [pageIndex, pageSize, globalFilter, url, token] // Ensure token is in the dependency array
   );
 

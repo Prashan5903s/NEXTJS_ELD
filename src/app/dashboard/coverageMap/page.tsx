@@ -44,7 +44,7 @@ const Page = () => {
       } catch (error) {
         console.error("Error fetching coordinates:", error);
       }
-    }, 500), // Adjust the debounce delay as needed
+    }, 1000), // Adjust the debounce delay as needed
     [token]
   );
 
