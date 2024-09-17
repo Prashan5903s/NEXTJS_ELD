@@ -4,7 +4,6 @@ import AddLocationModal from "./locationForm/addLocationPopup";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { debounce } from "lodash";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSession } from "next-auth/react";
 import { useJsApiLoader } from "@react-google-maps/api";
@@ -393,7 +392,6 @@ const LocationTable = () => {
 
   return (
     <>
-      <ToastContainer />
       <div className="listItems">
         <div className="topBar">
           <div className="title">

@@ -4,7 +4,6 @@ import Header from "@/Components/Header";
 import RightSidebar from "@/Components/RightSidebar";
 import Sidebar from "@/Components/SideBar";
 import { SessionProvider } from "next-auth/react";
-import { ToastContainer } from "react-toastify";
 
 export default function RootLayout({
   children,
@@ -36,7 +35,6 @@ export default function RootLayout({
   return (
     <>
       <SessionProvider>
-        <ToastContainer />
         <div className='main' style={{ height: '100vh', width: '100%' }}>
           <Header toggle={toggleSidebar} />
           <div className='dashboard'>

@@ -11,7 +11,6 @@ import addrole from "../../../../../public/media/auth/add-role.png";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import styles from "./UserRole.module.css";
-import { ToastContainer } from "react-toastify";
 
 interface Permission {
   id: number;

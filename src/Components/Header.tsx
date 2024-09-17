@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { Oval } from "react-loading-icons"; // Import the spinner component
 import axios from "axios";
 import { useSession, signOut } from "next-auth/react";
-import Skeleton from "react-loading-skeleton"; // Import Skeleton
 import "react-loading-skeleton/dist/skeleton.css"; // Import Skeleton CSS
 import { formatDistanceToNow } from "date-fns";
 

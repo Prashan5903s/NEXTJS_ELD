@@ -17,7 +17,6 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import { ToastContainer } from "react-toastify";
 
 const FLeetTable = () => {
   const url = process.env.NEXT_PUBLIC_BACKEND_API_URL;

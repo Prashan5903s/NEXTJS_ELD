@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SessionProvider } from "next-auth/react";
-import { ToastContainer } from "react-toastify";
 
 export default function AuthLayout({
   children
@@ -12,7 +11,6 @@ export default function AuthLayout({
   return (
     <>
       <SessionProvider>
-        <ToastContainer />
         <div className='d-flex flex-column flex-lg-row flex-column-fluid h-100'>
           <div className='d-flex flex-column overflow-y-auto flex-lg-row-fluid w-lg-50 p-10 order-2 order-lg-1 '>
             <div className='d-flex flex-center flex-column flex-lg-row-fluid'>

@@ -1,7 +1,5 @@
 'use client'
 import { Inter } from "next/font/google";
-import Image from "next/image";
-import Link from "next/link";
 import Header from "./Header";
 import Sidebar from "./SideBar";
 import { SessionProvider } from "next-auth/react";
@@ -17,8 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <>
+      <ToastContainer />
       <SessionProvider>
-        <ToastContainer />
         <div className='main' style={{ height: '100vh', width: '100%' }}>
           <Header />
           <div className='dashboard'>

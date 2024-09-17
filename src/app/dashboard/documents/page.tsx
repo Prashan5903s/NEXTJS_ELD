@@ -10,7 +10,6 @@ import { useSession } from 'next-auth/react';
 import Skeleton from "react-loading-skeleton"; // Import Skeleton
 import "react-loading-skeleton/dist/skeleton.css"; // Import skeleton styles
 import ToggleSwitchDocument from "@/Components/documentToggle";
-import { ToastContainer } from "react-toastify";
 
 
 import {
@@ -265,7 +264,6 @@ const DocumentTable = () => {
 
   return (
     <>
-      <ToastContainer />
       <div className="listItems">
         {/* Header and Search bar */}
         <div className="topBar">

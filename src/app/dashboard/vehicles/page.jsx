@@ -4,7 +4,6 @@ import AddVehicleModal from "./vehicleForm/AddvehiclePopup";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { debounce } from "lodash";
-import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { getPermissions } from "@/Components/permission/page";
 import { useSession } from 'next-auth/react';
@@ -184,7 +183,6 @@ const VehicleTable = () => {
 
   return (
     <>
-      <ToastContainer />
       <div className="listItems">
         <div className="topBar">
           <div className="title">
