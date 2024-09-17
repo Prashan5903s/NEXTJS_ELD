@@ -249,7 +249,7 @@ export default function HoursOfService({ params }) {
     setLoading(true);
     try {
       // Throttling: Wait before making the request
-      await new Promise((resolve) => setTimeout(resolve, throttleDelay));
+      // await new Promise((resolve) => setTimeout(resolve, throttleDelay));
 
       const response = await fetch(
         `${BackEND}/graph/chart/data/${driverId}/${date}`,
